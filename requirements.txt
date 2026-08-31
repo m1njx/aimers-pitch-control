@@ -1,0 +1,11 @@
+# 파이프라인 실행용
+lightgbm
+catboost
+xgboost
+scikit-learn
+pandas
+numpy
+joblib
+torch          # MLP 서브모델 추론
+
+# toolkit/ 은 numpy + pandas 만 있으면 동작합니다

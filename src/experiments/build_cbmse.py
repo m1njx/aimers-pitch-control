@@ -2,7 +2,7 @@
 
 왜
 --
-팀 문서 §3.2(a): 우리 자신의 보고서
+팀 `OPEN_QUESTIONS.md` §3.2(a): 우리 자신의 보고서
 `322_advanced_nonlinear_calibration_and_stacking_sota.md` 의 제약 메타스태킹 최적해가
 
 | 컴포넌트 | 우리 보고서 최적 가중 | v42 실제 배포 |

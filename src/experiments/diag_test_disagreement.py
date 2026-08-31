@@ -25,7 +25,7 @@ diag_test_disagreement.py — 블렌드 목적함수의 대수 검증 + 측정�
 
   D 는 라벨이 필요 없지만, **테스트와 같은 방식으로 생성된 예측**에서 재야 한다.
   `/private/tmp/triple5k.*` 의 5000행 프록시는 TRAIN 2024 에서 뽑은 행이고,
-  블렌드 B축 는 "2024년말 통산"을 이 행의 asof 카운터에서 빼서 시즌내 성분을 만든다.
+  팀 arm B 는 "2024년말 통산"을 이 행의 asof 카운터에서 빼서 시즌내 성분을 만든다.
   2024 행에 먹이면 통산 > 행 이라 **전 행에서 isf_n < 0** 이 되어 피처가 파괴된다
   (실측 100.0%, 중앙값 -515). 그 결과 B 의 예측 sd 가 0.026 으로 붕괴하고
   A-B RMS 불일치가 0.0386 (LB 정합값 0.0175 의 2.2배)로 부풀려진다.
@@ -78,7 +78,7 @@ def verify_master_identity():
 
 # ------------------------------------------------- 측정면 타당성 (B arm 전용 검사)
 def admissible(proxy_dir):
-    """블렌드 B축 의 isf 분해가 성립하는 행인지 검사한다.
+    """팀 arm B 의 isf 분해가 성립하는 행인지 검사한다.
 
     B 는 model/isf_pitcher.csv 의 '2024년말 통산'을 이 행의 asof 카운터에서 빼서
     시즌내 성분을 만든다. 2025 테스트 행이면 isf_n >= 0 이어야 한다.
@@ -148,7 +148,7 @@ def main():
     D_AB = verify_master_identity()
     if a.check_proxy is not None:
         dirs = a.check_proxy or ['/private/tmp/triple5k.n3Wmdd/v23/B']
-        print('\n=== 측정면 타당성 검사 (블렌드 B축) ===')
+        print('\n=== 측정면 타당성 검사 (팀 arm B) ===')
         for d in dirs:
             admissible(d)
     bounds(D_AB)

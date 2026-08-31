@@ -5,7 +5,7 @@ from catboost import CatBoostClassifier
 
 LG = os.path.expanduser('~/LG_data')
 sys.path.insert(0, os.path.join(LG, 'harness'))
-sys.path.insert(0, os.path.expanduser('~/harness'))   # 로컬 하네스 경로
+sys.path.insert(0, '<팀 저장소 경로>/harness')
 from metric import official_score, paired_bootstrap
 
 # Environment variables for Apple Silicon OpenMP safety

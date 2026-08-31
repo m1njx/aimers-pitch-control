@@ -105,7 +105,7 @@ python3 run.py list --status REJECTED
 
 - 대회 규정 원문 (금지·허용 항목)
 - 제출 슬롯 수, 순위 산정 방식(최고점 기준인가)
-- 팀 프로젝트라면 **판정용 홀드아웃 예측**(`train<Y` → Y 예측)
+- 팀이 있다면 **판정용 홀드아웃 예측**(`train<Y` → Y 예측)
   — 배포용만 받으면 in-sample 이라 가치를 잴 수 없다. 이 대회에서 실제로 막혔다.
 
 ## 사람에게 보고할 때
@@ -124,4 +124,4 @@ python3 run.py list --status REJECTED
 | `../01_METHODS.md` | 방법 요약 |
 | `../02_LESSONS.md` | 함정 20종 |
 | `../06_SUBMISSION_HISTORY.md` | 제출 이력 날짜순 |
-| `../reusable_toolkit/` | 실행 가능한 검증 도구 3종 |
+| `../toolkit/` | 실행 가능한 검증 도구 3종 |

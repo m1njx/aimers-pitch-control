@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 LG = os.path.expanduser('~/LG_data')
-TEAM = '<팀 저장소 경로>'
+TEAM = '<팀 저장소 경로>/experiments/v11_cli'
 ING = os.path.join(TEAM, 'ingame.py')
 
 _ORIG_GATE = "ok[h] = g & (role_T != 0) & (L5 >= L5_MIN) & w3"
@@ -45,7 +45,7 @@ def load(allow_role0=False, l5_min=150, skip_w3=False):
     """게이트만 바꾼 ingame 모듈 사본을 만든다. 원본 파일은 건드리지 않는다."""
     src = open(ING, encoding='utf-8').read()
     if _ORIG_GATE not in src:
-        raise RuntimeError('게이트 문자열을 못 찾았다 — 팀 ingame.py 가 바뀌었다. '
+        raise RuntimeError('게이트 문자열을 못 찾았다 — 팀 쪽 ingame.py 가 바뀌었다. '
                            '확장을 적용하기 전에 524 를 다시 확인할 것.')
     src = src.replace(_ORIG_GATE, _NEW_GATE)
     mod = types.ModuleType(f'ingame_r{int(allow_role0)}_{l5_min}_{int(skip_w3)}')
@@ -91,7 +91,7 @@ def main():
     print(f'베이스 {s0:.2f}   h<=6 오라클 상한 {ceil:+.2f}   전 행 오라클 {gain(tj,ts,np.ones(len(y),bool),1.5):+.2f}\n')
     print(f'{"설정":>26} {"커버":>7} {"정확도":>7} {"이득b1.2":>9} {"이득b1.5":>9} {"상한대비":>8}')
 
-    cfgs = [(False, 150, False, '기준선 (팀 구현 그대로)'),
+    cfgs = [(False, 150, False, '기준선 (팀 그대로)'),
             (True,  150, False, 'role0 허용'),
             (False, 100, False, 'L5>=100'),
             (False,  60, False, 'L5>=60'),

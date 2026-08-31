@@ -3,7 +3,7 @@
 
 무엇을 묻는가
 -------------
-제출물은 우리 arm A 단독이 아니라 블렌드 B축 와의 50:50 블렌드다. 517/diag_blend_gradient
+제출물은 우리 arm A 단독이 아니라 팀 arm B 와의 50:50 블렌드다. 517/diag_blend_gradient
 의 마스터 항등식:
 
     [G2]  Δu = Δs/4 − (K1/2)·E[Δ·r_B]           K1 = 1e5/V,  r_B = p_B − y

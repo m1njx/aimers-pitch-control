@@ -74,7 +74,7 @@ def arm5(v, bag, scale=1.10, shift=-0.0045192086):
 
 
 def pseudo_b(bag):
-    """B축 CatBoost arm 대역폭 스탠드인 (exp_partner_dedup.py 와 동일)."""
+    """팀 CatBoost arm 대역폭 스탠드인 (exp_partner_dedup.py 와 동일)."""
     out = []
     for P in bag:
         raw = np.clip(P['cb_bin'] - 0.008, EPS, 1 - EPS)

@@ -76,7 +76,7 @@ def main():
     c_t = 2 * (bl_t - 0.25 * a_t - 0.25 * b_t)
     D_t = c_t - 0.5 * (a_t + b_t)
     print('\n=== 팀 v23 (LB 실측) ===')
-    print('  a(우리v42)=%.1f  b(B축)=%.1f  블렌드=%.1f' % (a_t, b_t, bl_t))
+    print('  a(우리v42)=%.1f  b(팀v21b)=%.1f  블렌드=%.1f' % (a_t, b_t, bl_t))
     print('  c=%.2f   arm평균=%.2f   D = c - 평균 = %.2f' % (c_t, 0.5 * (a_t + b_t), D_t))
     print('  -> 50:50 블렌드가 arm평균 대비 얻은 이득 = D/2 = %.2f (최고 arm 대비 +%.1f)'
           % (D_t / 2, bl_t - a_t))

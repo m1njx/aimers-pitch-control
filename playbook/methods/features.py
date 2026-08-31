@@ -32,7 +32,7 @@ def asof_decompose(df: pd.DataFrame, base_col: str, recent_cols: list, n_col: st
         gain='단조 하락 → 확정 REJECT',
         evidence='누적 피처의 시즌별 수준 밀림을 보정. 이 대회에선 이득 없음',
         requires=['time_col'],
-        note='⚠️ 기법 자체는 유효하다 — 팀 C축 은 이걸 쓰고 +7.56 을 냈다. '
+        note='⚠️ 기법 자체는 유효하다 — 팀 C arm 은 이걸 쓰고 +7.56 을 냈다. '
              '구현·맥락이 결과를 가른다. 새 대회에서 분포 밀림이 크면 다시 볼 것.')
 def era_relative(df, cols, time_col, train_mask):
     """시즌 평균은 **학습 프레임에서만** 계산해 표로 저장, 미지 시즌은 마지막 값 대체.

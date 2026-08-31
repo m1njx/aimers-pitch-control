@@ -28,8 +28,8 @@ STAGES = [
         '데이터 크기·결측·카디널리티·시간 범위 확인',
         '제출 형식·슬롯 수·순위 산정 방식 확인 (최고점 기준이면 탐색 하방이 0)']),
     (1, '가드레일 설치 ★ 1일차에 반드시', [
-        '`reusable_toolkit/check_row_independence.py` 를 베이스라인에 연결',
-        '`reusable_toolkit/check_submission.py` 를 제출 스크립트에 묶기',
+        '`toolkit/check_row_independence.py` 를 베이스라인에 연결',
+        '`toolkit/check_submission.py` 를 제출 스크립트에 묶기',
         'SSOT 로그 파일 하나를 정하고 모든 판정을 append 하기 시작',
         '⚠️ 나중에 붙이면 이미 오염된 것을 못 본다']),
     (2, 'GBDT 기준선', [

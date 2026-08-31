@@ -1,4 +1,4 @@
-"""ensemble.py — 블렌드 수학. `reusable_toolkit/blend_math.py` 의 플레이북판."""
+"""ensemble.py — 블렌드 수학. `toolkit/blend_math.py` 의 플레이북판."""
 from __future__ import annotations
 from itertools import combinations
 import numpy as np

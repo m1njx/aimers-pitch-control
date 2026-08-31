@@ -3,11 +3,11 @@ exp_partner_dedup.py — 파트너 인지 재가중 (partner-aware reweighting).
 
 [G2]  Δu = Δs/4 − (K1/2)·E[Δ·r_B]
       → 블렌드를 올리는 자유도는 "우리 arm 을 올리는 것"이 아니라
-        "팀 블렌드 잔차 r_B 와 반대로 정렬되는 것"이다.
+        "팀 잔차 r_B 와 반대로 정렬되는 것"이다.
 
 가설:
   우리 arm A 의 성분 가중치는 **단독 skill** 최대화로 정해졌다(w_cb 유효 0.288).
-  그런데 블렌드 B축 는 CatBoost 다. 팀 블렌드 안에서 보면 우리 cb 성분은
+  그런데 팀 arm B 는 CatBoost 다. 팀 블렌드 안에서 보면 우리 cb 성분은
   B 와 중복이고, 중복 성분에 실린 가중치는 낭비다. 블렌드 목적함수로 다시
   최적화하면 cb→mlp 쪽으로 무게가 옮겨가면서 Δu > 0 이 나와야 한다.
 
@@ -16,9 +16,9 @@ exp_partner_dedup.py — 파트너 인지 재가중 (partner-aware reweighting).
   · 닫힌 축 20개와 다른 종류다 — 피처가 아니라 **팀 블렌드 안에서의 역할**을 바꾼다.
 
 ⚠️ 프록시 한계 (반드시 같이 읽을 것):
-  진짜 r_B 가 없어 우리 cb_bin 을 B축 CatBoost 대역으로 쓴다.
+  진짜 r_B 가 없어 우리 cb_bin 을 팀 CatBoost 대역으로 쓴다.
   corr(cb_bin, mlp)=0.913 은 LB 실측 corr(A,B)=0.926 과 같은 대역이지만,
-  **우리 cb 는 B축 cb 보다 우리 arm 과 더 겹친다**(같은 피처·같은 파이프라인).
+  **우리 cb 는 팀 cb 보다 우리 arm 과 더 겹친다**(같은 피처·같은 파이프라인).
   따라서 여기서 나오는 이득은 이 메커니즘의 **상한**이다. 확정은 팀 예측이 와야 한다.
   로컬 절대 skill 은 LB 와 역상관이므로(dacon-local-harness-invalid) 절대값이
   아니라 **부호와 방향의 폴드 일관성**만 본다.
@@ -70,7 +70,7 @@ def arm(v, per_seed, scale=1.10, shift=-0.0045192086):
 
 
 def pseudo_b(per_seed):
-    """B축 CatBoost arm 의 대역폭 스탠드인: cb_bin 단독, 자체 캘리브레이션."""
+    """팀 CatBoost arm 의 대역폭 스탠드인: cb_bin 단독, 자체 캘리브레이션."""
     out = []
     for P in per_seed:
         raw = np.clip(P['cb_bin'] - 0.008, EPS, 1 - EPS)

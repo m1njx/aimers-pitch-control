@@ -9,7 +9,7 @@
 
 | 용도 | 결과 |
 | :--- | :--- |
-| CatBoost 다멤버 GPU 학습 (팀 공동 파트) | ✅ 채택 — 블렌드의 한 축 |
+| **CatBoost 20멤버 GPU 학습** (B arm) | ✅ 채택 — 블렌드의 한 축이 됐다 |
 | **CatBoost GPU 게이트 후보** (`i2x_l2384_gpu` 등) | ✅ 일부 채택 |
 | **트랙맨 물리 arm C 학습** (Colab T4, 다수 변형) | ❌ **전량 낭비** — ρ 0.00% |
 | **super 번들 학습** (Colab) | ❌ 낭비 — 정직 재학습 시 AUC 0.4985 |
@@ -38,15 +38,57 @@
 
 ---
 
-## 2. 클라우드 GPU — 팀 운영 기준 (참고)
+## 2. RunPod SOP (팀 확정, pod 6개 운영 경험)
 
-클라우드 GPU 운영은 팀 공동 파트라 상세 절차는 담지 않았습니다.
-다만 겪은 문제 두 가지는 기록해 둡니다.
+원문: `HANDOFF_v29.md` §4
 
-- **저가 등급 인스턴스는 GPU 불량률이 높다** — 4회 중 3회 `nvidia-smi` 는 정상인데
-  `torch.cuda.is_available()` 이 False. 실행 전에 이 한 줄을 반드시 확인한다.
-- **중지(stop)가 아니라 종료(terminate)** — 중지는 GPU 슬롯 반납이라 재시작이 보장되지 않는다.
-  **산출물은 생성 즉시 회수**한다.
+### 2.1 반드시 지킬 두 가지
+
+1. **Secure Cloud 만 쓴다.**
+   Community 는 4회 중 **3회 GPU 불량** — `nvidia-smi` 는 보이는데
+   `torch.cuda.is_available()` 이 False. 우회 3종 전부 실패.
+   Secure 는 4/4 정상.
+2. **stop 하지 말고 terminate 한다.**
+   stop 은 GPU 슬롯 반납이라 재시작이 보장되지 않는다(Secure 포함, 2회 확인).
+   **산출물은 생성 즉시 scp 로 회수**한다.
+
+### 2.2 확정 구성
+
+| 항목 | 값 |
+| :--- | :--- |
+| 카드 | **A40 48GB $0.44/h** (CatBoost 1.2.10 호환 확실). L4 / 4090 Secure 도 가능 |
+| 이미지 | `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404` |
+| 디스크 | 40/40GB |
+| 포트 | 22/tcp |
+| 새 pod 스테이징 시간 | **약 10분** |
+
+### 2.3 스테이징 절차
+
+```bash
+K="-i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+H=root@<ip>; P=<port>
+
+# ① GPU 실물 확인 — False 면 즉시 terminate 하고 재생성
+ssh $K -p $P $H 'python3 -c "import torch;print(torch.cuda.is_available())"'
+
+# ② 데이터 전송 (md5 로 무결성 확인)
+ssh $K -p $P $H 'mkdir -p /workspace/repo/data'
+scp $K -P $P data/*.csv $H:/workspace/repo/data/
+
+# ③ 코드 전송 (로그·캐시 제외)
+tar czf /tmp/code.tgz --exclude='*.log' --exclude='__pycache__' harness experiments submit_v9/model
+scp $K -P $P /tmp/code.tgz $H:/workspace/
+ssh $K -p $P $H 'cd /workspace/repo && tar xzf ../code.tgz --no-same-owner'
+
+# ④ 의존성 — 채점 이력이 있는 목록 그대로
+ssh $K -p $P $H 'python3 -m pip install --break-system-packages \
+  catboost==1.2.10 scikit-learn==1.8.0 pandas==2.3.3 numpy==2.4.4 joblib==1.5.3 lightgbm xgboost'
+
+# ⑤ 피처 캐시 생성 후 학습
+ssh $K -p $P $H 'cd /workspace/repo && python3 experiments/v11_cli/build_cache.py'
+```
+
+---
 
 ## 3. Colab 워크플로
 
@@ -111,10 +153,10 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 KMP_DUPLICATE_
 
 | 대상 | 투입 | 회수 |
 | :--- | :--- | :--- |
-| CatBoost 다멤버 (팀 공동 파트) | 클라우드 GPU | ✅ 블렌드 한 축 |
+| CatBoost 20멤버 (B arm) | RunPod A40, pod 6개 | ✅ 블렌드 한 축 |
 | 물리 arm C 변형 11종 | Colab T4 다수 세션 | ❌ ρ 0.00%, 전량 폐기 |
 | super 번들 | Colab | ❌ AUC 0.4985 |
 
 **성공 1건 / 실패 2건.** 실패 2건은 **상한 스크린 몇 분**이면 사전에 걸렀다.
 
-관련: `02_METHODS.md` · `03_LESSONS.md` · `playbook/methods/validation.py::rho_screen`
+관련: `01_METHODS.md` §4.4 · `02_LESSONS.md` B절 · `playbook/methods/validation.py::rho_screen`

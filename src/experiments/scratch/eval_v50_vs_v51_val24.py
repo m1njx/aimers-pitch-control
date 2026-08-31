@@ -1,0 +1,224 @@
+import os
+import sys
+import joblib
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+import lightgbm as lgb
+from catboost import CatBoostClassifier
+import xgboost as xgb
+
+BASE_DIR = os.path.expanduser('~/LG_data')
+data_dir = os.path.join(BASE_DIR, 'open', 'data')
+work_v50_dir = os.path.join(BASE_DIR, 'work', 'submit_v50')
+work_v51_dir = os.path.join(BASE_DIR, 'work', 'submit_v51')
+
+def brier_score(y_true, y_prob):
+    return np.mean((y_prob - y_true) ** 2)
+
+def brier_skill(y_true, y_prob, r=0.4861):
+    base_brier = r * (1 - r)
+    return 100000.0 * (1.0 - brier_score(y_true, y_prob) / base_brier)
+
+df = pd.read_csv(os.path.join(data_dir, 'train.csv'))
+df_val24 = df[df['season'] == 2024].reset_index(drop=True)
+y_val24 = df_val24['control_success'].values.astype(np.float32)
+
+print("Evaluating v50 and v51 on 2024 Holdout...")
+
+# Evaluate v50
+sys.path.insert(0, work_v50_dir)
+from preprocessing import PitchPreprocessor as PP50
+from trackman_features import TrackmanFeatureBuilder as TFB50
+from agent2_asof_decomp2 import AsofDecomposer2 as AD50
+
+# Load v50 artifacts
+tkm_50 = joblib.load(os.path.join(work_v50_dir, 'model', 'trackman_artifacts.pkl'))
+prep_50 = joblib.load(os.path.join(work_v50_dir, 'model', 'preprocessor_artifacts.pkl'))
+dec_50 = joblib.load(os.path.join(work_v50_dir, 'model', 'asof_decomposer_artifacts.pkl'))
+count_shifts_50 = joblib.load(os.path.join(work_v50_dir, 'model', 'count_shifts_artifact.pkl'))
+
+# Run v50 script logic on df_val24
+X_base_50 = prep_50.transform(df_val24)
+base_str = ((df_val24['runner_on_1b'].fillna(0) > 0).astype(int).astype(str) + '_' +
+            (df_val24['runner_on_2b'].fillna(0) > 0).astype(int).astype(str) + '_' +
+            (df_val24['runner_on_3b'].fillna(0) > 0).astype(int).astype(str))
+cc_str = (df_val24['balls_before'].fillna(0).astype(int).astype(str) + '_' +
+          df_val24['strikes_before'].fillna(0).astype(int).astype(str))
+count_x_base_raw = (cc_str + '_' + base_str)
+cat_map = getattr(prep_50, 'count_x_base_map', {})
+X_base_50['count_x_base'] = count_x_base_raw.map(cat_map).fillna(-1).astype(int)
+
+v0 = X_base_50['tkm_rel_speed_mean'].clip(lower=60.0) * 1.46667
+ext = X_base_50['tkm_extension_mean'].clip(lower=4.0, upper=8.0)
+rel_side = X_base_50['tkm_rel_side_mean']
+rel_height = X_base_50['tkm_rel_height_mean']
+ivb = X_base_50['tkm_induced_vert_break_mean'] / 12.0
+hb = X_base_50['tkm_horz_break_mean'] / 12.0
+
+t_flight = (60.5 - ext) / v0
+t_tunnel = (t_flight - 0.15).clip(lower=0.01)
+r_ratio = t_tunnel / t_flight
+d_tunnel = np.sqrt((rel_side + hb * r_ratio)**2 + (rel_height + ivb * r_ratio)**2)
+d_plate = np.sqrt((rel_side + hb)**2 + (rel_height + ivb)**2)
+
+X_base_50['tkm_tunnel_dist_015s'] = d_tunnel.astype(np.float32)
+X_base_50['tkm_plate_break_divergence'] = ((d_plate - d_tunnel) / 0.15).astype(np.float32)
+X_base_50['tkm_deception_index'] = (d_plate / (d_tunnel + 0.1)).astype(np.float32)
+
+A_50 = dec_50.transform(df_val24)
+A_50.index = X_base_50.index
+X_base_50 = pd.concat([X_base_50, A_50], axis=1)
+
+v_rel = X_base_50['tkm_rel_speed_mean'].clip(lower=60.0)
+spin = X_base_50['tkm_spin_rate_mean'].clip(lower=500.0)
+dist_to_plate = (60.5 - ext).clip(lower=50.0)
+
+b = df_val24['balls_before'].fillna(0).values
+s = df_val24['strikes_before'].fillna(0).values
+li = df_val24['li'].fillna(1.0).values
+r2 = (df_val24['runner_on_2b'].fillna(0) > 0).astype(float).values
+r3 = (df_val24['runner_on_3b'].fillna(0) > 0).astype(float).values
+score_diff = df_val24['score_diff_pitcher_team'].fillna(0).values
+inning = df_val24['inning'].fillna(1).values
+fb_rate = df_val24['asof_pitcher_fastball_rate'].fillna(0.5).values
+br_rate = df_val24['asof_pitcher_breaking_rate'].fillna(0.3).values
+off_rate = df_val24['asof_pitcher_offspeed_rate'].fillna(0.2).values
+platoon_code = (df_val24['pitcher_hand'].astype(str) == df_val24['batter_hand'].astype(str)).astype(float).values
+
+extra_50 = {
+    'phys_effective_velocity': (v_rel * (60.5 / dist_to_plate)).astype(np.float32),
+    'phys_vaa_proxy': (np.arctan((rel_height - 2.5 + ivb) / dist_to_plate) * (180.0 / np.pi)).astype(np.float32),
+    'phys_haa_proxy': (np.arctan((rel_side + hb) / dist_to_plate) * (180.0 / np.pi)).astype(np.float32),
+    'phys_spin_efficiency': (np.sqrt((ivb * 12.0)**2 + (hb * 12.0)**2) / spin).astype(np.float32),
+    'feat_count_advantage': (s - 1.5 * b).astype(np.float32),
+    'feat_full_count': ((b == 3) & (s == 2)).astype(np.float32),
+    'feat_pitcher_ahead': ((s > b) & (s >= 2)).astype(np.float32),
+    'feat_pitcher_behind': ((b > s) & (b >= 2)).astype(np.float32),
+    'feat_clutch_pressure': (li * (1.0 + r2 + r3) * np.exp(-np.clip(score_diff**2 / 10.0, 0, 5.0))).astype(np.float32),
+    'feat_scoring_position': (r2 + r3).astype(np.float32),
+    'feat_platoon_fastball_inter': (platoon_code * fb_rate).astype(np.float32),
+    'feat_platoon_breaking_inter': (platoon_code * br_rate).astype(np.float32),
+    'feat_platoon_offspeed_inter': (platoon_code * off_rate).astype(np.float32),
+    'feat_late_inning_clutch': ((inning >= 7).astype(float) * li).astype(np.float32),
+}
+X_133_50 = pd.concat([X_base_50, pd.DataFrame(extra_50, index=X_base_50.index)], axis=1)
+
+SEEDS = [7, 123, 2025, 31415, 8675309]
+p_lgb_sum_50 = np.zeros(len(df_val24))
+p_cb_sum_50 = np.zeros(len(df_val24))
+p_xgb_sum_50 = np.zeros(len(df_val24))
+p_mse_sum_50 = np.zeros(len(df_val24))
+
+cat_cols = ['top_bottom', 'base_state', 'pitcher_hand', 'batter_hand', 'pitcher_team_id', 'batter_team_id', 'count_code', 'platoon_matchup', 'tkm_match', 'count_x_base']
+X_cb_50 = X_base_50[list(cat_cols) + [c for c in X_base_50.columns if c not in cat_cols and c not in extra_50]].copy()
+for c in cat_cols:
+    X_cb_50[c] = pd.to_numeric(X_cb_50[c], errors='coerce').fillna(-1).astype(int).astype(str)
+for c in [col for col in X_cb_50.columns if col not in cat_cols]:
+    X_cb_50[c] = pd.to_numeric(X_cb_50[c], errors='coerce').fillna(0.0).astype(np.float32)
+
+X_xgb_50 = X_base_50[list(cat_cols) + [c for c in X_base_50.columns if c not in cat_cols and c not in extra_50]].copy()
+for c in cat_cols:
+    if c == 'count_x_base':
+        X_xgb_50[c] = X_xgb_50[c].astype(np.float32)
+    else:
+        X_xgb_50[c] = (X_xgb_50[c] - 1).astype(np.float32)
+X_xgb_50 = X_xgb_50.astype(np.float32)
+
+X_133_mat_50 = X_133_50.values.astype(np.float32)
+
+for seed in SEEDS:
+    m_lgb = lgb.Booster(model_file=os.path.join(work_v50_dir, 'model', f'lgbm_model_seed{seed}.txt'))
+    p_lgb_sum_50 += m_lgb.predict(X_base_50.iloc[:, :len(prep_50.model_feature_whitelist) + 3 + len(A_50.columns)])
+    m_cb = CatBoostClassifier()
+    m_cb.load_model(os.path.join(work_v50_dir, 'model', f'catboost_model_seed{seed}.cbm'))
+    p_cb_sum_50 += m_cb.predict_proba(X_cb_50)[:, 1]
+    m_xgb = xgb.XGBClassifier()
+    m_xgb.load_model(os.path.join(work_v50_dir, 'model', f'xgb_model_seed{seed}.json'))
+    p_xgb_sum_50 += m_xgb.predict_proba(X_xgb_50)[:, 1]
+    m_mse = lgb.Booster(model_file=os.path.join(work_v50_dir, 'model', f'lgbm_mse_model_seed{seed}.txt'))
+    p_mse_sum_50 += m_mse.predict(X_133_mat_50)
+
+n_seeds = len(SEEDS)
+p_gbdt_bin_50 = np.clip(0.20*(p_lgb_sum_50/n_seeds - 0.007) + 0.72*(p_cb_sum_50/n_seeds - 0.008) + 0.08*(p_xgb_sum_50/n_seeds - 0.006), 1e-6, 1 - 1e-6)
+p_mse_50 = np.clip(p_mse_sum_50/n_seeds, 1e-6, 1 - 1e-6)
+
+# SimpleMLP v50
+class CatEmbedder(nn.Module):
+    def __init__(self, cat_cardinalities, emb_dim=8, max_emb_dim=16):
+        super().__init__()
+        self.embs = nn.ModuleList([
+            nn.Embedding(card, min(max_emb_dim, max(2, int(card ** 0.25 * emb_dim))))
+            for card in cat_cardinalities
+        ])
+        self.out_dim = sum(e.embedding_dim for e in self.embs)
+    def forward(self, x_cat):
+        if len(self.embs) == 0:
+            return torch.zeros(x_cat.shape[0], 0, device=x_cat.device)
+        return torch.cat([emb(x_cat[:, i]) for i, emb in enumerate(self.embs)], dim=1)
+
+class SimpleMLP_BCE_50(nn.Module):
+    def __init__(self, num_dim, cat_cardinalities, hidden=(128, 64), dropout=0.12):
+        super().__init__()
+        self.cat_embedder = CatEmbedder(cat_cardinalities)
+        in_dim = num_dim + self.cat_embedder.out_dim
+        layers = []
+        prev = in_dim
+        for h in hidden:
+            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(dropout)]
+            prev = h
+        layers.append(nn.Linear(prev, 1))
+        layers.append(nn.Sigmoid())
+        self.net = nn.Sequential(*layers)
+    def forward(self, x_num, x_cat):
+        x_cat_emb = self.cat_embedder(x_cat)
+        x = torch.cat([x_num, x_cat_emb], dim=1)
+        return self.net(x).squeeze(-1)
+
+art_50 = joblib.load(os.path.join(work_v50_dir, 'model', 'mlp_artifacts.pkl'))
+num_cols_mlp, cat_cols_mlp = art_50['num_cols'], art_50['cat_cols']
+mean_mlp, std_mlp = art_50['mean'], art_50['std']
+cat_vocabs = art_50['cat_vocabs']
+cat_cardinalities = art_50['cat_cardinalities']
+num_dim = art_50['num_dim']
+
+num_raw = X_133_50[num_cols_mlp].astype(np.float32).values
+num_z = np.nan_to_num((num_raw - mean_mlp) / std_mlp, nan=0.0)
+num_t = torch.tensor(num_z, dtype=torch.float32)
+
+cat_cols_arr = []
+for c in cat_cols_mlp:
+    vocab = cat_vocabs[c]
+    unk_idx = len(vocab)
+    vals = X_133_50[c].astype(str)
+    cat_cols_arr.append(vals.map(vocab).fillna(unk_idx).astype(np.int64).values)
+cat_arr = np.stack(cat_cols_arr, axis=1) if cat_cols_arr else np.zeros((len(X_133_50), 0), dtype=np.int64)
+cat_t = torch.tensor(cat_arr, dtype=torch.long)
+
+p_mlp_sum_50 = np.zeros(len(df_val24), dtype=np.float64)
+for seed in SEEDS:
+    mlp_net = SimpleMLP_BCE_50(num_dim, cat_cardinalities, hidden=(128, 64), dropout=0.12)
+    mlp_net.load_state_dict(torch.load(os.path.join(work_v50_dir, 'model', f'mlp_model_seed{seed}.pt'), map_location='cpu'))
+    mlp_net.eval()
+    with torch.no_grad():
+        p_mlp_sum_50 += mlp_net(num_t, cat_t).numpy()
+p_mlp_50 = p_mlp_sum_50 / len(SEEDS)
+
+p_blend_50 = 0.25 * p_gbdt_bin_50 + 0.50 * p_mlp_50 + 0.25 * p_mse_50
+balls = df_val24['balls_before'].fillna(0).astype(int).values
+strikes = df_val24['strikes_before'].fillna(0).astype(int).values
+count_codes = [f"{b}_{s}" for b, s in zip(balls, strikes)]
+
+p_cond_50 = p_blend_50.copy()
+for i, cc in enumerate(count_codes):
+    if cc in count_shifts_50:
+        p_cond_50[i] += count_shifts_50[cc]
+
+p_cal_50 = np.clip(0.5 + 1.10 * (p_cond_50 - 0.5) - 0.003500, 1e-6, 1 - 1e-6)
+score_50 = brier_skill(y_val24, p_cal_50)
+
+print(f"v50 Val 2024 Score: {score_50:.2f} pts (Mean prob: {p_cal_50.mean():.6f})")
+
+# NOW LET'S CHECK V51 MLP!
+print("\nChecking v51 MLP predictions...")

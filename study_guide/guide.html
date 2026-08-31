@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>테이블 예측 대회 방법론</title>
+<style>
+@page { size: A4; margin: 17mm 15mm 18mm 15mm; }
+body { font-family:"Apple SD Gothic Neo","AppleGothic","Helvetica Neue",sans-serif;
+  font-size:10pt; line-height:1.6; color:#141414; margin:0; }
+h1 { font-size:23pt; margin:0 0 2px; letter-spacing:-.5px; }
+h2 { font-size:15pt; margin:0 0 16px; padding:8px 12px; background:#141414; color:#fff;
+  border-radius:3px; page-break-after:avoid; }
+h3 { font-size:12.6pt; margin:22px 0 8px; padding:5px 0 5px 10px; border-left:5px solid #1a4d8f;
+  background:linear-gradient(90deg,#eef3fa,transparent); page-break-after:avoid; }
+h4 { font-size:10.6pt; margin:13px 0 4px; color:#1a4d8f; page-break-after:avoid;
+  border-bottom:1px dotted #b9c4d2; padding-bottom:2px; }
+h5 { font-size:10pt; margin:10px 0 3px; color:#444; page-break-after:avoid; }
+p,li { margin:4px 0; }
+ul,ol { padding-left:19px; margin:4px 0; }
+code { font-family:"SF Mono",Menlo,monospace; font-size:8.6pt; background:#eef1f5;
+  padding:1px 4px; border-radius:3px; }
+pre { background:#f7f9fb; border:1px solid #dde3ea; border-left:3px solid #1a4d8f;
+  padding:8px 11px; border-radius:4px; font-size:8.5pt; line-height:1.45;
+  page-break-inside:avoid; overflow-x:auto; margin:7px 0; }
+pre code { background:none; padding:0; }
+table { border-collapse:collapse; width:100%; margin:8px 0; font-size:8.9pt;
+  page-break-inside:avoid; }
+th { background:#e9edf3; border:1px solid #c2cad4; padding:4px 6px; text-align:left; font-weight:600; }
+td { border:1px solid #d6dbe2; padding:4px 6px; vertical-align:top; }
+.num { text-align:right; font-variant-numeric:tabular-nums; }
+.c { text-align:center; }
+.box { border-radius:4px; padding:7px 11px; margin:8px 0; page-break-inside:avoid; font-size:9.4pt; }
+.intu { border-left:4px solid #00695c; background:#f0f7f6; }
+.pro { border-left:4px solid #2e7d32; background:#f3f9f3; }
+.con { border-left:4px solid #c62828; background:#fdf4f4; }
+.when{ border-left:4px solid #ef6c00; background:#fff8f0; }
+.real{ border-left:4px solid #6a1b9a; background:#faf5fc; }
+.syn { border-left:4px solid #0277bd; background:#f0f7fc; }
+.anti{ border-left:4px solid #b71c1c; background:#fbeeee; }
+.warn{ border:2px solid #c62828; background:#fff5f5; border-radius:4px; padding:8px 12px;
+  margin:10px 0; page-break-inside:avoid; font-size:9.4pt; }
+.lbl { font-weight:700; font-size:9pt; letter-spacing:.2px; }
+.meta{ color:#5a5a5a; font-size:9pt; }
+.pb { page-break-before:always; }
+.toc{ column-count:2; column-gap:22px; font-size:9.1pt; }
+.toc div{ margin:2px 0; break-inside:avoid; }
+.toc .g{ font-weight:700; margin-top:8px; color:#1a4d8f; }
+hr{ border:none; border-top:1px solid #dde1e6; margin:16px 0; }
+.card{ border:1px solid #ccd3dc; border-radius:5px; padding:0; margin:12px 0;
+  page-break-inside:avoid; overflow:hidden; }
+.card .hd{ background:#f2f5f9; padding:5px 10px; font-weight:700; font-size:10.4pt;
+  border-bottom:1px solid #ccd3dc; }
+.card .bd{ padding:8px 11px; }
+.tag{ display:inline-block; font-size:7.8pt; padding:1px 6px; border-radius:9px;
+  margin-left:5px; vertical-align:middle; font-weight:600; }
+.t-a{ background:#2e7d32; color:#fff; } .t-r{ background:#c62828; color:#fff; }
+.t-s{ background:#ef6c00; color:#fff; }
+.dg{ font-family:"SF Mono",Menlo,monospace; font-size:8.2pt; line-height:1.35;
+  background:#f7f9fb; border:1px solid #dde3ea; padding:8px 10px; border-radius:4px;
+  white-space:pre; overflow-x:auto; page-break-inside:avoid; }
+.mx td,.mx th{ text-align:center; padding:3px 2px; font-size:8pt; }
+.mx td.l{ text-align:left; font-weight:600; }
+.g2{ background:#c8e6c9; } .g1{ background:#e8f5e9; }
+.r2{ background:#ffcdd2; } .r1{ background:#ffebee; } .n0{ background:#f5f5f5; color:#999; }
+</style></head><body>
+
+<h1>테이블 예측 대회 방법론</h1>
+<p class="meta" style="margin:2px 0 4px">기법 44종의 개념 · 구현 · 시너지 · 실측 기록</p>
+<p class="meta" style="border-top:2px solid #141414;padding-top:6px;margin-bottom:16px">
+2026 Aimers 9기 「투구 제구 성공 확률 예측」 &nbsp;·&nbsp; Claude · Gemini · GPT · Kiro + 사람 2명
+&nbsp;·&nbsp; 최종 Public LB <b>1113.12</b> &nbsp;·&nbsp; 2026-08-31</p>
+
+<div class="card"><div class="hd">이 책을 읽는 법</div><div class="bd">
+<p>각 기법은 <b>일정한 형식</b>으로 서술한다. 급하면 <span class="lbl">직관</span>과
+<span class="lbl">실측</span>만 읽어도 된다.</p>
+<table><tr><th style="width:16%">절</th><th>내용</th></tr>
+<tr><td><b>직관</b></td><td>왜 이게 작동하는가. 수식 없이</td></tr>
+<tr><td><b>형식</b></td><td>수식·알고리즘</td></tr>
+<tr><td><b>구현</b></td><td>바로 쓸 수 있는 코드</td></tr>
+<tr><td><b>장점 / 단점</b></td><td>무엇을 얻고 무엇을 감수하는가</td></tr>
+<tr><td><b>언제</b></td><td>이 기법을 꺼낼 조건</td></tr>
+<tr><td><b>🔗 시너지</b></td><td>같이 쓰면 <b>서로를 강화</b>하는 기법</td></tr>
+<tr><td><b>⚡ 안티시너지</b></td><td>같이 쓰면 <b>서로를 무력화하거나 위험</b>한 조합</td></tr>
+<tr><td><b>실측</b></td><td>이 대회에서 나온 <b>실제 숫자</b></td></tr></table>
+<p style="margin-top:7px"><span class="tag t-a">채택</span> 실전 점수를 냈다 &nbsp;
+<span class="tag t-r">기각</span> 시도했고 실패 &nbsp; <span class="tag t-s">보류</span> 여건이 안 됐다</p>
+<p style="margin-top:6px"><b>가장 중요한 한 줄</b>: 이 대회에서 점수를 준 것은
+<b>구조적 변경</b>(새 피처 블록 · 독립 파이프라인 결합 · 엔티티 룩업)뿐이고,
+<b>미세조정은 전부 ±1~13점</b> 안에 있었다.</p>
+</div></div>
+
+<h2 style="margin-top:18px">목차</h2>
+<div class="toc">
+<div class="g">1부 · 토대</div>
+<div>1.1 지표의 대수적 구조</div><div>1.2 노이즈 바닥</div><div>1.3 자유도라는 통화</div>
+<div class="g">2부 · 모델링</div>
+<div>2.1 GBDT</div><div>2.2 신경망</div><div>2.3 시드 배깅</div>
+<div>2.4 목적함수 선택</div><div>2.5 지식 증류</div>
+<div class="g">3부 · 피처</div>
+<div>3.1 as-of 분해</div><div>3.2 시즌 상대화</div><div>3.3 도메인 물리</div>
+<div>3.4 잠재변수</div><div>3.5 숨은 라벨 디코딩</div><div>3.6 상태 복원</div>
+<div class="g">4부 · 엔티티 룩업</div>
+<div>4.1 타겟 인코딩과 EB</div><div>4.2 이중 중심화 잔차 룩업</div>
+<div>4.3 대비 타겟</div><div>4.4 축 스윕</div><div>4.5 실패한 변형들</div>
+<div class="g">5부 · 캘리브레이션</div>
+<div>5.1 아핀 보정</div><div>5.2 로짓 셀 오프셋</div><div>5.3 LB 역산</div>
+<div>5.4 분산 수축 분해</div><div>5.5 고자유도 사후처리의 함정</div>
+<div class="g">6부 · 앙상블</div>
+<div>6.1 2차형식</div><div>6.2 최적 가중치</div><div>6.3 ρ</div>
+<div>6.4 게이팅</div><div>6.5 스태킹</div><div>6.6 라이브러리 천장</div>
+<div class="g">7부 · 검증</div>
+<div>7.1 폴드와 예측 시계</div><div>7.2 레짐</div><div>7.3 중첩</div>
+<div>7.4 사전 등록</div><div>7.5 무작위 대조군</div><div>7.6 시드</div>
+<div>7.7 전이비</div><div>7.8 상한 스크린</div>
+<div class="g">8부 · 규정·누출</div>
+<div>8.1 행 독립성</div><div>8.2 누출 유형</div><div>8.3 특권 피처</div>
+<div class="g">9부 · 시너지 지도</div>
+<div>9.1 시너지 매트릭스</div><div>9.2 핵심 결합 5종</div><div>9.3 금지 조합 7종</div>
+<div class="g">10부 · 운영</div>
+<div>10.1 제출물</div><div>10.2 GPU·클라우드 연산</div>
+<div>10.3 로컬 실행 인프라</div><div>10.4 다중 에이전트</div>
+<div class="g">11부 · 실행 순서</div>
+</div>
+
+<h2 class="pb">1부 · 토대</h2>
+<p class="meta">이 세 개념은 나머지 전부의 전제다. 여기를 건너뛰면 뒤의 판정을 신뢰할 수 없다.</p>
+
+<h3>1.1 지표의 대수적 구조 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+대회 지표가 예측값에 대해 <b>2차식</b>이면, 여러 모델을 섞는 문제는 <b>포물선의 꼭짓점 찾기</b>가 된다.
+포물선은 세 점만 알면 완전히 결정되므로, <b>모델을 실제로 섞어보지 않고 최적 조합을 계산</b>할 수 있다.
+이 성질을 첫날 확인하면 이후 앙상블 실험의 대부분이 산수로 바뀐다.</div>
+<h4>형식</h4>
+<pre><code>Brier skill = C·(1 − Brier/V),  V = r(1−r),  r = 라벨 평균
+blend p = Σ wᵢpᵢ,  Σw = 1
+MSE(p) = Σᵢⱼ wᵢwⱼ·E[(pᵢ−y)(pⱼ−y)]          ← w 에 대해 정확히 2차
+
+Gram 행렬:  u(w) = wᵀMw
+  M_ii = sᵢ
+  M_ij = (sᵢ+sⱼ)/2 + (C/2V)·d_ij²        d_ij = ‖pᵢ−pⱼ‖_RMS</code></pre>
+<p>즉 <b>n개 모델의 모든 조합 점수</b>가 <b>스킬 n개 + 쌍거리 n(n−1)/2개</b>로 완전히 결정된다.
+3-arm 이면 <b>6개 수치</b>다.</p>
+<div class="box pro"><span class="lbl">장점</span> 실험을 계산으로 대체. 새 모델의 기여도를
+<b>학습 전에</b> 추정 가능(6.3과 결합).</div>
+<div class="box con"><span class="lbl">단점</span> AUC·LogLoss·F1 에는 성립하지 않는다.
+LogLoss 는 로짓 공간 근사만 가능.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>6.3 ρ</b>(이 식에서 직접 유도) · <b>6.6 라이브러리 천장</b>(같은 행렬 재사용) ·
+<b>7.8 상한 스크린</b>(필요 ρ 를 이 식으로 역산)</div>
+<div class="box real"><span class="lbl">실측</span> 실제 모델 5종의 관측 기여도를
+<b>최대오차 0.02</b>로 재현. 이후 블렌드 실험을 전부 종이 계산으로 대체했다.</div>
+
+<h3>1.2 노이즈 바닥 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+같은 방법을 시드만 바꿔 두 번 돌리면 점수가 얼마나 흔들리는가. 이 폭을 모르면
+"개선했다"와 "운이 좋았다"를 구별할 수 없다. <b>이 값은 이후 모든 판정의 단위</b>가 된다.</div>
+<h4>구현</h4>
+<pre><code>scores = [train_and_score(seed=s) for s in [0,1,2,3,4]]   # 최소 5
+floor  = 2 * np.std(scores, ddof=1)      # 이 값 미만의 차이는 개선이 아니다</code></pre>
+<div class="warn"><b>⚠️ 이 값은 <u>시드 노이즈</u>다.</b> 결정적 사후처리(같은 입력이면 같은 출력)에는
+시드 노이즈가 <b>0</b>이므로 그대로 갖다 쓰면 안 된다. 이 대회에서 실제로 오용한 적이 있다.</div>
+<div class="box real"><span class="lbl">실측</span> 두 제출물의 md5 전수 비교로
+<b>신경망 서브모델만 다르고 나머지가 바이트 동일</b>한 쌍을 찾아 LB 차를 쟀다 → <b>±12점</b>.
+이 값 미만의 "개선" 기록 다수가 사후에 무효화됐다.</div>
+
+<h3>1.3 자유도라는 통화 — 이 책의 숨은 주제</h3>
+<div class="box intu"><span class="lbl">직관</span>
+어떤 기법이 <b>살아남는가 죽는가</b>는 대개 <b>자유도</b>가 결정한다.
+파라미터가 적을수록 폴드를 넘어 전이되고, 많을수록 그 폴드의 특수사정을 외운다.
+<b>같은 검증을 통과해도 자유도가 다르면 운명이 다르다.</b></div>
+<table><tr><th>기법</th><th class="c">자유도</th><th class="c">정직 분할</th><th class="c">실전</th></tr>
+<tr><td>아핀 보정</td><td class="c">2</td><td class="c">통과</td><td class="c">✅ +12.9</td></tr>
+<tr><td>엔티티 잔차 룩업 (EB+게이트)</td><td class="c">실효 낮음</td><td class="c">통과</td><td class="c">✅ +23.3</td></tr>
+<tr><td>잔차 후처리 GBDT (400×63)</td><td class="c">~25,000</td><td class="c"><b>통과</b></td><td class="c">❌ <b>−4.1</b></td></tr>
+<tr><td>무수축 타겟 인코딩</td><td class="c">엔티티 수</td><td class="c">통과(로컬)</td><td class="c">❌ <b>−929</b></td></tr></table>
+<p><b>정직한 홀드아웃 분할 통과는 필요조건이지 충분조건이 아니다.</b>
+자유도가 크면 <b>연도별·폴드별 특수 구조</b>를 외우고, 그것은 다음 기간에 남지 않는다.
+룩업이 살아남은 이유는 <b>EB 수축 + 관측량 게이트</b>가 실효 자유도를 극단적으로 낮췄기 때문이다.</p>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+자유도를 낮추는 장치들은 <b>중첩해서 쓸수록 좋다</b>:
+EB 수축 × 관측량 게이트 × 계수 수축(×0.8) × 교차폴드 적합 — 이 대회의 룩업은 넷을 전부 썼다.</div>
+
+<h2 class="pb">2부 · 모델링</h2>
+
+<h3>2.1 GBDT <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+테이블 데이터에서 트리 부스팅이 강한 이유는 <b>축 정렬 분할</b>이 실제 데이터의 규칙
+("2스트라이크이고 주자가 있으면…")과 형태가 같기 때문이다. 결측·범주·비선형을 별도 처리 없이 다룬다.</div>
+<table><tr><th>라이브러리</th><th>강점</th><th>이 대회 역할</th></tr>
+<tr><td>LightGBM</td><td>속도·대용량, leaf-wise</td><td>기준선 / 회귀 서브모델</td></tr>
+<tr><td>CatBoost</td><td>순서형 부스팅, 범주 자동</td><td>주력 arm (20멤버 GPU)</td></tr>
+<tr><td>XGBoost</td><td>정규화·안정성</td><td>3-way 보조</td></tr></table>
+<div class="box pro"><span class="lbl">장점</span> 적은 튜닝으로 강한 기준선. 스케일링 불필요. 해석 도구 풍부.</div>
+<div class="box con"><span class="lbl">단점</span> <b>외삽 불가</b> — 학습 범위 밖 값에 취약.
+시간이 흐르며 분포가 밀리면 <b>분할점이 어긋난다</b>. 고카디널리티 범주에 과적합.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>3.2 시즌 상대화</b>(분포 밀림을 보정해 외삽 약점을 덮는다) ·
+<b>2.3 시드 배깅</b>(거의 항상 소폭 개선) · <b>2.4 회귀 목적함수</b>(같은 GBDT로 다른 오차 구조를 만든다)</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>GBDT 비중 축소</b> — 이 대회에서 <b>일관되게 손해</b>였다(10%→968, 14%→915, 기준 1032).
+GBDT 는 앙상블의 중심으로 두고 다른 것을 <b>더하는</b> 방식이 맞다.</div>
+<div class="box real"><span class="lbl">실측</span> 최고점은 GBDT 25~45% 구간에 집중.
+그리고 <b>CatBoost 의 <code>cat_features</code> 지정이 −15.49</b>로 오히려 손해였다 —
+"권장 설정"을 믿지 말고 재라.</div>
+
+<h3>2.2 신경망 <span class="tag t-a">채택(1종)</span> <span class="tag t-r">기각(다종)</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+신경망이 GBDT 를 이겨서 가치가 있는 게 아니다. <b>틀리는 방식이 달라서</b> 가치가 있다.
+블렌드에서 중요한 것은 성능이 아니라 <b>오차의 방향</b>이다(6.3).</div>
+<div class="box pro"><span class="lbl">장점</span> GBDT와 오차 구조가 달라 블렌드 이득이 크다.
+연속값의 부드러운 함수를 잘 표현. 임베딩으로 고카디널리티 ID를 다룰 수 있다.</div>
+<div class="box con"><span class="lbl">단점</span> 튜닝 비용·시드 분산이 크고,
+<b>outer fold 일반화가 구조적으로 약하다</b>.</div>
+<div class="box when"><span class="lbl">언제</span> GBDT 기준선이 선 <b>뒤에</b>, <b>블렌드 멤버로만</b>.
+단독 최고 성능을 노리고 쓰는 것은 대개 손해.</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지 — 이게 핵심이다</span>
+<b>신경망 종류를 늘리는 것</b>은 일관되게 손해였다. 이유는 명확하다 —
+<b>신경망끼리는 서로 상관이 높다</b>(이 대회 실측 NN↔NN 거리 0.005~0.018, 필요치 0.029).
+즉 두 번째 신경망은 <b>첫 번째와 거의 같은 방향</b>을 가리켜 ρ 기여가 0 이다.</div>
+<div class="box real"><span class="lbl">실측</span>
+MLP <b>한 종</b> 블렌딩 → <b>+36.24</b>(1000점 첫 돌파). ✅<br>
++ResNet+Transformer → 1008 ❌ &nbsp;|&nbsp; +TabNet → 993 ❌ (기준 1032)<br>
+TabM 블렌딩 → 로컬 888.43, <b>LB 818.07 (−70.36)</b>. 사후 outer 검증에서 GBDT 단독보다 −28.29 ❌</div>
+
+<h3>2.3 시드 예측 배깅 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+같은 모델을 다른 시드로 여러 번 학습해 <b>예측을 평균</b>한다(가중치 평균 아님).
+각 모델의 우연한 실수가 서로 상쇄된다.</div>
+<div class="box pro"><span class="lbl">장점</span> 거의 항상 소폭 개선. 구현 단순, 위험 없음.</div>
+<div class="box con"><span class="lbl">단점</span> 비용이 시드 수에 비례하고 <b>이득이 빠르게 포화</b>한다.</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>이미 배깅된 모델에 시드를 더 늘리기</b> — 이 대회에서 5-seed → 15-seed SWA 로 바꾸니
+<b>LB 1032 → 1020</b>. 분산이 더 작아야 할 쪽이 더 낮았고, 이것이 노이즈 바닥 발견의 계기가 됐다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>1.2 노이즈 바닥</b> — 시드 배깅용으로 학습한 모델들을 그대로 노이즈 측정에 재활용할 수 있다.</div>
+
+<h3>2.4 목적함수 선택 — 분류 vs 회귀 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+이진 라벨이어도 <b>MSE 로 학습</b>할 수 있다. 지표가 Brier 라면 회귀가 지표와 직결된다.
+그리고 분류 모델과 <b>다른 곳에서 틀리므로</b> 블렌드 멤버로 가치가 있다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>6.1 2차형식</b> — 회귀 모델은 지표와 목적함수가 일치해 Gram 계산의 가정과 잘 맞는다.<br>
+<b>2.1 GBDT</b> — 같은 라이브러리·같은 피처로 <b>추가 학습 비용 없이</b> 다른 방향의 모델을 얻는다.</div>
+<div class="box real"><span class="lbl">실측</span> GBDT분류 + GBDT회귀 + MLP회귀 3-way 가
+구조적 개선 <b>+12.53</b>. 최종 채택 비율 <code>0.40 / 0.40 / 0.20</code>.</div>
+
+<h3>2.5 지식 증류 <span class="tag t-r">기각</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+강한 교사의 <b>소프트 예측</b>을 학생의 타겟으로 쓴다. 교사가 배포 불가여도 지식 일부를 옮길 수 있다.</div>
+<div class="warn"><b>🚨 두 가지를 반드시 확인하라.</b><br>
+① <b>이득이 정보인가 수축인가</b> — 5.4 로 분해하라. 이 대회에서 증류 이득 +85.2 중
+<b>정보항이 −83.4</b>, 전량이 분산 수축이었다.<br>
+② <b>교사가 특권 피처를 쓰는가</b> — 이 대회 교사 3종이 <b>예측 대상 사건 자체의 실측값</b>을
+쓰고 있었다. 배포 불가 + 규정 위반이었다(8.3).</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>증류 + 특권 피처 교사</b> = 배포 불가능한 지식을 학생에게 옮기려는 시도.
+학생이 그 신호를 흉내낼 수 없으면 이득은 0 이거나 잡음이다.</div>
+
+<h2 class="pb">3부 · 피처 엔지니어링</h2>
+
+<h3>3.1 as-of 누적 피처와 분해 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+"이 시점까지의 누적 성적"은 주최자가 주면 누출 걱정 없이 쓸 수 있는 <b>공짜 정보</b>다.
+그런데 그대로 넣으면 트리는 <b>수준(level)</b>만 본다.
+사람이 실제로 보는 것은 <b>"평소보다 지금 잘하고 있는가"</b> 같은 <b>차분</b>이다.
+그 차분을 명시적으로 만들어 주는 것이 분해다.</div>
+<h4>구현</h4>
+<pre><code>level       = asof_rate                    # 장기 실력
+recent_dev  = prev5_rate − asof_rate       # 최근 폼 편차   ← 트리가 만들기 어려운 것
+volume      = log1p(asof_n)                # 관측량 = 신뢰도
+volatility  = |prev1_rate − prev5_rate|    # 변동성</code></pre>
+<div class="box pro"><span class="lbl">장점</span> 트리가 스스로 만들기 어려운 <b>차분·비율</b>을 제공.
+관측량을 함께 주면 모델이 <b>신뢰도를 학습</b>한다.</div>
+<div class="box con"><span class="lbl">단점</span> 누적값은 <b>시간이 갈수록 수준이 밀린다</b>
+(이 대회: 관측량 중앙값 571 → 2942). 그대로 두면 분할점이 어긋난다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>3.2 시즌 상대화</b>(밀림 문제를 정확히 해결) · <b>3.5 라벨 디코딩</b>(같은 누적 컬럼에서 라벨을 더 얻는다) ·
+<b>4.2 엔티티 룩업</b>(누적 컬럼의 관측량이 <b>게이트</b>로 재사용된다)</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>EWMA·최근성 재가중과 겹쳐 쓰기</b> — 둘 다 "최근 폼"을 보므로 정보가 중복되고,
+EWMA 는 <b>사건 경계를 넘으면 리키지</b>가 된다(3.2 경고 참조).</div>
+<div class="box real"><span class="lbl">실측</span> <b>as-of 분해피처 46개 → LB +146.80</b>.
+단일 변경으로 대회 전체 최대 이득. 4개 기간 홀드아웃 일관성을 확인하고 채택했다.</div>
+
+<h3>3.2 시즌 상대화 <span class="tag t-r">기각(이 대회)</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+시대가 바뀌면 같은 숫자의 의미가 달라진다. 각 행을 <b>자기 시대의 평균</b>과 비교해 상대화한다.</div>
+<pre><code># 시즌 평균은 학습 프레임에서만 계산해 표로 저장
+# 표에 없는 시즌(테스트)은 **마지막 학습 시즌 값**으로 대체
+#   → 행 자신의 season 만 보는 lookup 이라 행 독립이 유지된다
+val = row[col] − season_mean.get(row.season, last_train_mean)</code></pre>
+<div class="box real"><span class="lbl">실측</span> 이 대회 실험에서는 <b>단조 하락 → 기각</b>.
+<b>그러나</b> 팀의 다른 파이프라인은 이 기법을 채택했고 그 모델이 <b>+7.56</b>을 냈다.
+→ <b>기법 자체가 아니라 구현·맥락이 결과를 가른다.</b> 분포 밀림이 크면 다시 볼 것.</div>
+<div class="warn"><b>⚠️ 최근성 가중의 리키지</b><br>
+EWMA 형태로 "최근 경기 가중"을 주면 이득이 크게 나오는 경우가 있는데,
+<b>같은 사건 단위(경기·세션) 안의 미래 정보</b>가 새어 들어간 것일 수 있다.
+이 대회 실측: EWMA 최근성 이득 <b>+98점의 100%가 경기내 리키지</b>였다.<br>
+<b>이득이 비정상적으로 크면 리키지부터 의심하라.</b></div>
+
+<h3>3.3 도메인 물리 파생 피처 <span class="tag t-r">기각</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+도메인 지식으로 원시 측정값을 조합해 의미 있는 양을 만든다. 성공하면 남이 못 가진 정보가 된다.
+<b>그러나 대부분 실패한다</b> — 원본의 결정함수라 정보량이 0인 경우가 많기 때문이다.</div>
+<div class="warn"><b>만들기 전에 반드시 이 검사를 하라 (6초면 된다)</b>
+<pre><code># 새 파생 피처가 기존 조인키의 결정함수인가?
+df.groupby(join_keys)[new_feature].std().max()   # 0 이면 정보량 0 → 버린다</code></pre>
+이 대회에서 트랙맨 파생 블록 <b>전체가 조인키 7개의 결정함수</b>였다(셀 내 sd=0).</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>물리 파생 + 기존 집계 피처</b> — 집계에서 파생을 만들면 정보가 늘지 않고 <b>차원만 는다</b>.
+이 대회 실측: 물리 137피처 블록(+3.27)이 원본 43컬럼(+5.20)보다 <b>낮았다</b> — 희석만 했다.</div>
+<div class="box real"><span class="lbl">실측</span>
+터널링 3종 → +1.37 &nbsp;|&nbsp; 물리 9종 → <b>−361.17</b> &nbsp;|&nbsp;
+모델로 만들었을 때 잔차 설명력 <b>ρ = 0.00%</b></div>
+
+<h3>3.4 잠재변수 (CFA) <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+상관된 수많은 피처 뒤에 <b>소수의 공통 요인</b>이 있다고 가정하고 그것을 추정한다.
+PCA와 달리 CFA는 도메인 가설로 요인 구조를 <b>미리 지정</b>한다.</div>
+<div class="box con"><span class="lbl">단점</span> GBDT 는 이미 상관 피처를 잘 다루므로 이득이 작다.
+요인 적재는 <b>train 에서만</b> 적합해야 한다.</div>
+<div class="box when"><span class="lbl">언제</span> 피처가 수백 개고 강하게 상관될 때.
+<b>선형 모델·신경망</b>에 특히 유용(GBDT 에는 덜하다).</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>2.2 신경망</b> — 차원이 줄고 잡음이 걷히면 신경망 학습이 안정된다. GBDT 보다 궁합이 낫다.</div>
+
+<h3>3.5 숨은 라벨 디코딩 <span class="tag t-a">채택</span> ★ 재사용 가치 최상</h3>
+<div class="box intu"><span class="lbl">직관</span>
+누적 통계는 <b>사건이 하나씩 더해진 결과</b>다. 그러면 <b>연속된 두 행의 차이</b>는
+그 사이에 일어난 <b>한 사건의 결과</b>다. 즉 주최자가 라벨 하나만 줬어도,
+누적 컬럼이 여러 개면 <b>라벨 차원을 여러 개 복원</b>할 수 있다.</div>
+<h4>형식</h4>
+<pre><code>outcome(이번 사건) = rate(다음행)·n(다음행) − rate(이번행)·n(이번행)
+# 같은 엔티티의 연속 행이고 n 이 정확히 1 증가하는 쌍만 사용
+# 결과가 {0,1} 에 충분히 가까운 행만 채택
+
+# ★ 반드시 검산: 이미 아는 라벨 차원으로 정확도를 확인한다</code></pre>
+<div class="box pro"><span class="lbl">장점</span> 없던 라벨이 생긴다. <b>train 안에서만</b> 하므로 규정 안전.
+비용이 거의 0.</div>
+<div class="box con"><span class="lbl">단점</span> 연속 행이 확보돼야 한다. 반올림 처리 필요.
+<b>복원했다고 유용한 것은 아니다.</b></div>
+<div class="box when"><span class="lbl">언제</span> 데이터에 누적·이동평균 컬럼이 있으면 <b>무조건</b>.</div>
+<div class="box syn"><span class="lbl">🔗 시너지 — 이 대회 최고의 조합</span>
+<b>4.3 대비 타겟 룩업</b>. 디코딩으로 얻은 보조 라벨을 룩업의 <b>타겟</b>으로 쓴다.
+디코딩 자체는 점수를 안 주지만, <b>룩업에 공급되면 +11.00</b>이 된다.
+→ <b>디코딩은 단독 기법이 아니라 재료 공급 기법</b>이다.</div>
+<div class="box real"><span class="lbl">실측</span> 5개 결과 차원 복원,
+<b>알려진 차원과 대조해 99.95% 일치</b>, 복원률 99.8%.
+그중 <b>하나</b>(reverse−middle 대비)만 룩업 타겟으로 유효했고 나머지는 대조군 미만이었다.</div>
+
+<h3>3.6 상태 복원 (창 대수) <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+"시즌 누적"과 "직전 경기들 누적"이 둘 다 있으면, 그 차이가 <b>지금 경기에서 진행된 분량</b>이다.
+아무도 안 주는 <b>현재 진행 상태</b>를 대수로 역산해 낸다.</div>
+<pre><code>j = 총누적_n − (시즌앵커_n + 직전경기들_n)     # 이번 사건 인덱스
+s = 총누적_s − (시즌앵커_s + 직전경기들_s)     # 이번 진행 성공수
+# 유일해가 안 나오면 train 적합 밴드 안에서 배수 탐색
+
+correction = sigmoid(logit p + b·(s − j·p)/(j + K))    # 복원된 행에만</code></pre>
+<div class="box con"><span class="lbl">단점</span> 대수가 복잡하고 커버리지가 제한적.
+밴드 탐색은 <b>정밀도 임계</b>를 정해야 한다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>3.1 as-of 분해</b>(같은 누적 컬럼을 쓴다) · <b>5.2 로짓 시프트</b>(보정 형태가 로짓 가산이라 자연스럽게 연결)</div>
+<div class="box real"><span class="lbl">실측</span> <b>LB +17.09</b>, 커버리지 확장으로 <b>+6.06</b> 추가.</div>
+
+<h2 class="pb">4부 · 엔티티 룩업 — 이 대회 최대 성과</h2>
+<div class="warn" style="border-color:#1a4d8f;background:#f0f5fb"><b>[기여 구분]</b> 이 장의 기법은 <b>팀 공동 파트에서 도입</b>됐다. 여기 담은 것은 레시피 정리와, 내가 수행한 <b>독립 검증</b>(자체 예측 위에서 +19.70 재현)과 <b>확장 시도 18종</b>(제3축 11 · 타겟 7, 전부 무작위 대조군 미만으로 기각)의 기록이다.</div>
+
+<h3>4.1 타겟 인코딩과 EB 수축 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+"이 투수는 평소 성공률이 얼마인가"를 한 숫자로 넣는다. 문제는 <b>3번 던진 투수</b>도
+성공률이 계산된다는 것. 그래서 관측이 적으면 <b>전체 평균 쪽으로 끌어당긴다</b>(수축).</div>
+<pre><code>r_entity = (성공수 + K·r_parent) / (관측수 + K)      # K = 50~200
+# K 는 "가상의 관측 K 번을 부모 수준으로 미리 넣어둔다"는 뜻이다</code></pre>
+<div class="warn"><b>🚨 세 가지를 어기면 재앙이다</b><br>
+① <b>수축을 반드시 넣는다</b> — 무수축 버전이 이 대회에서 <b>LB 103</b>(정상 1032)을 냈다<br>
+② <b>out-of-fold 로 만든다</b> — 자기 행의 라벨이 자기 인코딩에 들어가면 안 된다<br>
+③ <b>표는 train 에서만</b> — 홀드아웃 기간을 표 생성에 쓰면 계수가 폭주한다(실측 10배)</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>타겟 인코딩 + 고자유도 모델</b> — 인코딩이 이미 라벨 정보를 압축해 넣었는데
+그 위에 자유도 큰 모델을 얹으면 <b>누출이 증폭</b>된다. 인코딩을 쓸수록 모델은 보수적으로.</div>
+
+<h3>4.2 이중 중심화 잔차 룩업 <span class="tag t-a">채택</span> ★★ 최대 성과</h3>
+<div class="box intu"><span class="lbl">직관</span>
+"투수 A는 잘한다"(엔티티 주효과)와 "2스트라이크에서는 다들 잘한다"(문맥 주효과)는
+모델이 <b>이미 안다</b>. 남는 것은 <b>"투수 A는 <u>유독</u> 2스트라이크에서 잘한다"</b>는
+개인별 상호작용이다. 이걸 뽑으려면 <b>두 주효과를 모두 빼야</b> 한다.
+그래서 이중 중심화다.</div>
+<h4>형식</h4>
+<pre><code>dev = r(엔티티, 셀, 제3축) − r(엔티티, 상위셀)          ← 엔티티 주효과 제거
+    − [ 리그 r(셀, 제3축) − 리그 r(상위셀) ]            ← 문맥 주효과 제거
+
+shift = gate(관측량 ≥ n_min) · (β₁·dev_cell + β₂·dev_coarse)
+p ← sigmoid(logit p + shift)</code></pre>
+<h4>0 과 +20 을 가르는 5요소</h4>
+<table><tr><th class="c" style="width:5%">#</th><th style="width:34%">요소</th><th>빠지면 무슨 일이</th></tr>
+<tr><td class="c">1</td><td><b>이중 중심화</b></td><td>주효과에 묻혀 상호작용이 안 보인다</td></tr>
+<tr><td class="c">2</td><td><b>제3축</b> (매치업 성격의 축)</td><td><b>2축만으로는 정확히 0</b>이 나온다</td></tr>
+<tr><td class="c">3</td><td><b>EB 수축</b> (부모=엔티티×상위셀)</td><td>희소 셀의 잡음이 신호를 덮는다</td></tr>
+<tr><td class="c">4</td><td><b>관측량 게이트</b></td><td>관측 적은 엔티티가 해를 끼친다</td></tr>
+<tr><td class="c">5</td><td><b>β 를 다른 폴드에서 적합 + ×0.8</b></td><td>폴드내 최적은 전이되지 않는다</td></tr></table>
+<div class="box pro"><span class="lbl">장점</span> <b>모델 재학습 없이 사후처리로 적용</b>.
+자유도가 극히 낮아 전이가 잘 된다(1.3). 완전한 행 독립.</div>
+<div class="box con"><span class="lbl">단점</span> <b>제3축 선택이 결정적인데 어떤 축이 먹힐지는 재봐야 안다</b>.
+그리고 대부분의 축은 안 먹힌다(4.5).</div>
+<div class="box when"><span class="lbl">언제</span> 반복 등장하는 엔티티(선수·상점·사용자)와 문맥 변수가 있는
+<b>모든 대회</b>. 베이스 모델 직후 최우선.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>3.1 as-of</b>(관측량 컬럼이 게이트로 직결) · <b>3.5 디코딩</b>(대비 타겟 공급) ·
+<b>5.2 로짓 시프트</b>(적용 형태가 같아 체인으로 이어진다) ·
+<b>7.5 무작위 대조군</b>(축 선택 시 필수)</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>같은 계열 룩업을 여러 개 쌓기</b> — 라벨 조건부 표들은 서로 상관이 <b>0.90 이상</b>이라
+두 번째부터 이득이 급감한다. <b>다른 타겟</b>으로 가야 한다(4.3).</div>
+<div class="box real"><span class="lbl">실측</span>
+<b>정직 측정 +19.70 → LB +15.21.</b> 이후 평활 강도 조정으로 +1.56 추가.</div>
+
+<h3>4.3 대비 타겟 룩업 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+같은 표 구조에 <b>타겟만 바꾼다</b>. 원 라벨이 아니라
+"실패했을 때 <u>어느 쪽으로</u> 실패했는가"의 대비를 타겟으로 삼으면,
+원 라벨 룩업이 못 보는 <b>다른 축의 개인차</b>가 잡힌다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>3.5 디코딩</b> 없이는 불가능하다 — 보조 라벨이 있어야 대비를 만들 수 있다.
+이 둘은 <b>사실상 한 세트</b>다.</div>
+<div class="box real"><span class="lbl">실측</span> <b>+11.00 → LB +5.47.</b>
+같은 키·같은 레시피, 타겟만 교체했는데 원 룩업과 <b>거의 겹치지 않는 이득</b>이 나왔다.</div>
+
+<h3>4.4 축 스윕 (무작위 대조군 포함) <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+제3축이 무엇이어야 하는지는 <b>이론으로 못 정한다</b>. 여러 개를 훑어야 한다.
+그런데 여러 개를 훑으면 <b>우연히 좋아 보이는 것</b>이 반드시 나온다.
+그래서 <b>가짜 축</b>을 같이 넣어 "우연의 크기"를 함께 잰다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span> <b>7.5 무작위 대조군</b>과 분리 불가능한 한 세트.</div>
+<div class="box real"><span class="lbl">실측</span> 11개 실후보 최고 <b>+0.49</b> vs 무작위 최고 <b>+0.94</b>
+→ 즉시 기각. <b>대조군이 없었으면 "발견"으로 보고됐을 것이다.</b></div>
+
+<h3>4.5 실패한 변형들 <span class="tag t-r">기각</span></h3>
+<table><tr><th>변형</th><th>결과</th><th>해석</th></tr>
+<tr><td>제3축을 문맥 변수로 교체 (11종)</td><td>최고 +0.49 &lt; 대조군 +0.94</td>
+<td>문맥은 엔티티와 <b>안정적 상호작용을 만들지 않는다</b></td></tr>
+<tr><td><b>대칭 엔티티</b>로 같은 표 (상대편 기준)</td><td>누출 오라클조차 <b>+0.06</b></td>
+<td>타겟을 <b>한쪽 엔티티가 통제</b>하면 비대칭이 실재한다</td></tr>
+<tr><td>타겟을 다른 차원으로 (7종)</td><td>최고 +1.89 &lt; 대조군 +2.44</td>
+<td>차원을 늘린다고 되는 게 아니다. <b>하나만 먹혔다</b></td></tr>
+<tr><td>게이트·평활 강도 격자 (5×4)</td><td>출하값이 이미 최적, 여지 <b>+0.00</b></td>
+<td>교차폴드로 고른 값은 대개 이미 최적이다</td></tr></table>
+<div class="box when"><span class="lbl">다른 대회에서는</span>
+대칭 엔티티는 <b>양쪽이 대등하게 결과를 통제하는 문제</b>(예: 대전 게임 승패)라면 유효할 수 있다.
+"실패"는 이 데이터에서의 실패다.</div>
+
+<h2 class="pb">5부 · 캘리브레이션과 사후보정</h2>
+
+<h3>5.1 아핀 보정 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+모델이 "전반적으로 소심하다"거나 "전체적으로 높게 본다"는 <b>계통 오차</b>는
+예측을 늘리고 옮기는 것만으로 고칠 수 있다. 파라미터가 2개뿐이라 과적합이 거의 없다.</div>
+<pre><code>p' = clip(0.5 + SCALE·(p − 0.5) + SHIFT, eps, 1−eps)
+# SCALE > 1 : 더 확신 있게(분산 확대)     SCALE < 1 : 수축</code></pre>
+<div class="box syn"><span class="lbl">🔗 시너지 — 강력하다</span>
+<b>5.3 LB 역산</b>. 파라미터가 2개뿐이라 <b>제출 2~3회로 최적값을 직접 찾을 수 있다</b>.
+자유도가 낮은 기법만이 LB 최적화를 감당한다.</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>SCALE 과 SHIFT 를 동시에 바꿔 제출하기</b> — 델타 해석이 불가능해진다.
+이 대회에서 실제로 두 개를 묶어 냈다가 <b>−3.39 의 원인을 특정하지 못했다</b>.</div>
+<div class="box real"><span class="lbl">실측</span> SCALE 1.10 + SHIFT −0.00452 → <b>+12.90</b><br>
+SCALE 1.15 로 확대 → <b>−7.41</b> &nbsp;|&nbsp; SHIFT −0.01 로 확대 → <b>−27.35</b><br>
+→ <b>좁은 국소 최적점</b>. 양방향 외삽 모두 실패. 이 축은 조기에 닫았다.</div>
+
+<h3>5.2 로짓 셀 오프셋 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+확률 공간에서 더하면 0/1 근처에서 범위를 벗어난다. <b>로짓에서 더하면</b> 자연스럽다.
+그리고 문맥 셀마다 다른 값을 주되, <b>전역 스케일 U 하나로 강도를 묶어</b> 자유도를 통제한다.</div>
+<pre><code>z = log(p/(1−p));  z[cell == k] += U · offset[k];  p = sigmoid(z)
+# 셀이 12개여도 실질 자유도는 U 하나에 가깝다 — 이것이 핵심 설계다</code></pre>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>1.3 자유도 통제</b>의 모범 사례. <b>3.6 상태 복원</b>·<b>4.2 룩업</b>과 같은 로짓 가산 형태라
+<b>체인으로 자연스럽게 이어진다</b>.</div>
+<div class="box real"><span class="lbl">실측</span> U=0.35 채택. U 를 0.40/0.50 으로 올리는 시도는
+각각 <b>−0.47 / −1.69</b> → 축 종결.</div>
+
+<h3>5.3 LB 역산 — 리더보드를 측정 도구로 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+로컬 검증이 못 잡는 것(시간 외삽 효과)을 <b>리더보드가 직접 측정</b>해 준다.
+계수 하나만 바꿔 3번 제출하면 <b>포물선 세 점</b>이 되고, 꼭짓점이 최적값이다.</div>
+<pre><code>points = [(1.2, 1076.19), (1.05, 1083.32), (1.5, 1078.86)]
+a,b,c = np.polyfit(*zip(*points), 2);  x* = -b/(2a)</code></pre>
+<div class="box when"><span class="lbl">언제</span> <b>최고점 기준</b> 대회(나쁜 제출이 기록을 안 깎음)면
+하방이 0이라 거의 공짜다. 슬롯만 소모된다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span> <b>5.1 아핀</b>·<b>5.2 셀 오프셋</b> —
+파라미터가 적은 기법에만 쓸 수 있다.</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지</span>
+<b>여러 개를 동시에 바꾸기</b> — 한 번에 하나만 바꿔야 델타가 그 축의 순수 신호가 된다.</div>
+<div class="box real"><span class="lbl">실측</span> 로컬로는 못 찾았을 최적값을 특정,
+그 계수로 <b>+17.09</b> 획득에 기여.</div>
+
+<h3>5.4 분산 수축 분해 <span class="tag t-a">채택</span> ★ 항상 함께 보고할 것</h3>
+<div class="box intu"><span class="lbl">직관</span>
+Brier 는 <b>확신을 줄이기만 해도</b> 좋아진다. 그래서 "개선"의 상당수가
+<b>정보가 늘어난 게 아니라 그냥 조심해진 것</b>이다. 이 둘은 반드시 분리해야 한다.
+왜냐하면 <b>수축은 이미 아핀 보정이 하고 있어서 중복</b>이기 때문이다.</div>
+<pre><code># 후보의 이득에서 '순수 수축'으로 설명되는 몫을 뺀다
+s*        = argmax skill(0.5 + s(p−0.5))         # 다른 폴드에서 적합
+shrink_d  = (0.5 + s*(p−0.5)) − p
+info_d    = cand_d − proj(cand_d, shrink_d)      # 수축 성분 제거
+정보 이득  = skill(p + info_d) − skill(p)</code></pre>
+<div class="box syn"><span class="lbl">🔗 시너지</span> <b>2.5 증류</b> 판정의 필수 도구.
+<b>모든 새 후보</b>의 이득 보고에 함께 붙여라.</div>
+<div class="box real"><span class="lbl">실측</span> 증류 축의 이득 +85.2 중
+<b>정보항 −83.4</b> → 전량이 수축임이 드러나 종결.<br>
+반대로 잔차 후처리 후보는 수축 기여가 <b>−2%</b>로 진짜 정보였는데도 <b>다른 이유로 실패</b>했다
+(5.5) — 수축 검사만으로는 부족하다는 뜻이다.</div>
+
+<h3>5.5 고자유도 사후처리의 함정 <span class="tag t-r">기각</span> ★ 이 대회 최대 교훈</h3>
+<div class="box intu"><span class="lbl">직관</span>
+"모델이 남긴 잔차를 다른 모델로 예측해 더하면 되지 않나?" — 자연스러운 발상이고,
+<b>정직한 홀드아웃 분할도 통과한다</b>. 그런데 실전에서 죽는다.
+이유는 그 모델이 <b>"이 데이터의 오차"가 아니라 "이 기간의 오차"를 외우기</b> 때문이다.</div>
+<div class="warn"><b>실제로 일어난 일</b> — 이 함정을 피하는 법을 여기서 배우는 게 낫다.<br>
+① 완전 분리 3분할(학습 / 계수적합 / 평가)에서 <b>+6.65</b> 획득 → 출하<br>
+② 실전 <b>−4.1</b><br>
+③ 사후 진단에서 <b>세 가지가 전부 기각</b>했고 <b>전부 출하 전에 볼 수 있었다</b>:
+<table style="margin-top:5px"><tr><th>학습</th><th>계수</th><th>평가</th><th class="num">β</th><th class="num">이득</th></tr>
+<tr><td>기간1</td><td>기간2</td><td>기간3</td><td class="num">+0.070</td><td class="num"><b>−22.35</b></td></tr>
+<tr><td>기간2</td><td>기간3</td><td>기간4</td><td class="num">−0.041</td><td class="num">+4.88</td></tr>
+<tr><td>기간1+2</td><td>기간3</td><td>기간4</td><td class="num">−0.140</td><td class="num">+3.21</td></tr></table>
+<b>ⓐ 다른 시점에서 재현 안 됨 &nbsp; ⓑ 계수 부호가 폴드마다 뒤집힘 &nbsp;
+ⓒ 시드 하나로 +6.65 → +3.21</b> (효과가 시드 잡음 안)</div>
+<div class="box anti"><span class="lbl">⚡ 안티시너지 — 일반 법칙</span>
+<b>고자유도 기법 + 시간 외삽</b>은 구조적으로 위험하다.
+스태킹·Isotonic·잔차 모델·무수축 인코딩이 전부 여기 해당한다.
+시간 축이 없는 대회(랜덤 분할)라면 같은 기법이 안전할 수 있다.</div>
+<div class="box when"><span class="lbl">그래도 쓰려면</span>
+① 최소 5시드 ② 양방향 폴드에서 <b>계수 부호 일치</b> 확인 ③ 출하할 <b>바로 그 산출물</b>을 검증
+(창을 밀거나 재학습했으면 그건 새 후보다)</div>
+
+<h2 class="pb">6부 · 앙상블</h2>
+
+<h3>6.1 2차형식 — 6.1~6.6 의 공통 토대</h3>
+<p>1.1 에서 유도한 Gram 행렬 <code>M</code> 하나가 <b>모든 조합의 점수</b>를 결정한다.
+아래 절들은 전부 이 행렬의 활용이다.</p>
+<div class="dg">      1.1 지표의 2차형식
+              │
+      ┌───────┼────────┬──────────────┐
+      ▼       ▼        ▼              ▼
+   6.2 최적  6.3 ρ   6.6 천장    7.8 상한 스크린
+   가중치   (채택판단) (계속/중단)   (학습 전 판정)</div>
+
+<h3>6.2 최적 가중치 <span class="tag t-a">채택</span></h3>
+<pre><code>w* ∝ M⁻¹·1                      # 아핀(음수 허용)
+# 심플렉스(w ≥ 0)면 부분집합 전수 탐색이 가장 안전 (모델 수가 적을 때)</code></pre>
+<div class="warn"><b>⚠️ 가중치를 평가 폴드에서 적합하면 반드시 과적합한다.</b>
+이 대회 실측 — 모델 57종 동시 최적화:
+<b>적합 폴드 +148.89 / 평가 폴드 −15.94</b>(약한 정규화).
+정규화를 강하게 걸어야 평가 폴드에 <b>+2.73</b>이 남았고, 그것이 진짜 천장이었다.</div>
+
+<h3>6.3 ρ — 이득을 결정하는 유일한 값 <span class="tag t-a">채택</span> ★★</h3>
+<div class="box intu"><span class="lbl">직관</span>
+새 모델이 블렌드에 보태는 값은 <b>그 모델이 얼마나 좋은가</b>도,
+<b>얼마나 다른가</b>도 아니다. <b>"기존 조합이 아직 못 맞히고 있는 부분을,
+그 모델의 고유한 방향이 얼마나 설명하는가"</b> 하나다.</div>
+<pre><code>Δ = (C − s_base)·ρ²
+ρ = corr( 현재 블렌드의 잔차,  새 모델의 고유방향 )
+고유방향 = 새 모델의 오차를 기존 모델들 오차의 아핀 부분공간에 투영하고 남은 성분</code></pre>
+<div class="warn"><b>이 두 가지가 이 책에서 가장 반직관적이고, 둘 다 실측으로 확인됐다.</b><br><br>
+<b>① 다양성의 "크기"는 레버가 아니다.</b><br>
+고유방향을 3배로 키워 상관을 0.905 → 0.583 으로 낮춰도 <b>기여는 완전히 불변</b>이고
+가중치만 정확히 1/m 로 준다. 블렌드가 알아서 재조정하기 때문이다.<br>
+→ <b>"상관을 낮추자"를 목표로 삼으면 노이즈 주입으로 '달성'되면서 점수가 깎인다.</b>
+실측: 노이즈 주입 → 상관 0.905→0.838, 기여는 <b>하락</b>.<br><br>
+<b>② 단독 성능도 레버가 아니다.</b><br>
+성능을 올리면 예측이 기존 모델들의 합의 쪽으로 끌려가 다양성이 그만큼 깎인다.
+이 대회 변형 11종에서 <b>성능 ↔ 거리 상관 −0.980</b>,
+<b>단독 성능 최고 모델이 최적 가중치 0.000</b>을 받았다.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>7.8 상한 스크린</b> — ρ 의 상한을 <b>모델을 학습하기 전에</b> 잴 수 있다. 이 둘이 한 세트.</div>
+<div class="box real"><span class="lbl">실측</span> 물리 피처 모델의 ρ = <b>0.66%</b>,
+게이트 통과 필요치 <b>1.10%</b> → 튜닝으로는 도달 불가임이 <b>계산으로</b> 증명돼 축을 닫았다.</div>
+
+<h3>6.4 게이팅 블렌드 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+어떤 모델이 <b>특정 구간에서만 구조적으로 약하다면</b>(그 구간의 피처를 안 썼다든지),
+그 구간의 가중치만 낮추면 된다. 행 자신의 컬럼으로 정하므로 규정도 안전하다.</div>
+<pre><code>w = np.where(row['segment'] == '약한구간', 0.20, 0.55)     # 행 자신의 컬럼만
+p = w * A + (1 − w) * B</code></pre>
+<div class="box syn"><span class="lbl">🔗 시너지</span>
+<b>7.2 레짐 점검</b> — 어느 구간이 약한지는 레짐 분석이 알려준다. 진단 → 처방의 관계.</div>
+<div class="box real"><span class="lbl">실측</span> 한 모델이 특정 리그 구분을 피처에서 제외해
+그 행에 미보정이었다 → 그 행만 가중치 0.55 → 0.20 으로 낮춰 채택.</div>
+
+<h3>6.5 스태킹 <span class="tag t-r">기각</span></h3>
+<div class="box con"><span class="lbl">단점</span> 자유도가 크고 <b>OOF 구성이 조금만 틀려도 누출</b>된다.
+시간 외삽에서 특히 약하다(5.5의 일반 법칙).</div>
+<div class="box real"><span class="lbl">실측</span> 여러 형태를 시도했으나
+<b>단순 가중 블렌드를 넘지 못했다</b>. 최종 채택은 전부 선형 블렌드다.</div>
+
+<h3>6.6 라이브러리 천장 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+"지금 가진 모델을 <b>전부, 최적으로</b> 조합하면 어디까지 가능한가?"
+이 값이 목표에 한참 못 미치면 <b>조합을 더 뒤지는 것은 무의미</b>하고 새 정보원이 필요하다.
+<b>캠페인을 계속할지 접을지</b>를 결정하는 도구다.</div>
+<pre><code># 가중치는 fit 폴드에서만 적합, eval 폴드에서 실현치를 본다
+# 정규화 강도를 반드시 훑을 것 — 약하면 과적합이 그대로 드러난다</code></pre>
+<div class="warn"><b>⚠️ 계산 전에 특권 피처 모델을 제외하라(8.3).</b>
+이 대회에서 교사 모델을 포함해 계산한 천장이 <b>+113(도달 가능)</b>이었는데,
+빼고 다시 계산하니 <b>+2.1</b>이었다. 하마터면 캠페인 전체를 잘못된 방향으로 끌 뻔했다.</div>
+
+<h2 class="pb">7부 · 검증 방법론</h2>
+<p class="meta">가장 비싸게 배운 부분이다. 여기의 규율 하나를 어겨 실전 점수를 잃었다.</p>
+
+<h3>7.1 폴드 설계와 예측 시계 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+시간 데이터는 <b>미래로만</b> 검증해야 한다. 그런데 그것만으로는 부족하다 —
+<b>"몇 년 뒤를 예측하는가"(예측 시계)가 폴드와 배포에서 같아야</b> 한다.</div>
+<div class="warn"><b>예측 시계 함정 — 실측</b><br>
+어떤 모델이 <b>1년 격차 폴드</b>에서 기여 <b>+33.80</b>, <b>2년 격차</b>에서 <b>+0.00</b>
+(폴드내 오라클조차 가중치 0)이었다. 같은 모델, 같은 데이터인데 격차만 달랐다.<br>
+<b>새 모델을 평가할 때 "학습에 쓴 마지막 시점"과 "평가 시점"의 간격을 먼저 적어라.</b></div>
+
+<h3>7.2 레짐 점검 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+데이터의 일부 세그먼트가 <b>어느 시점에 성질이 바뀌면</b> 그 구간을 포함한 폴드는 못 믿는다.
+폴드를 쓰기 전에 세그먼트별 라벨률·상관의 시간 추이를 그려라.</div>
+<div class="box real"><span class="lbl">실측</span> 한 세그먼트가 특정 연도에
+<b>상관 0.709 → 0.473</b>으로 붕괴 → 그 폴드는 <b>해당 세그먼트를 제외하고 채점</b>했다.
+그 결과 그 폴드가 <b>LB 최근사 폴드</b>가 됐다(평균절대오차 3.03 vs 다른 폴드 13.72).</div>
+<div class="box con"><span class="lbl">주의</span> 세그먼트를 제외하면
+<b>그 세그먼트에만 작용하는 파라미터는 그 폴드로 판정할 수 없다</b>. 적용 범위를 항상 확인하라.</div>
+
+<h3>7.3 중첩 검증 <span class="tag t-a">채택</span></h3>
+<p>튜닝은 inner 에서만, 최종 검증은 outer 에서 한 번만.
+<b>실측: inner 노이즈 ±11.98 / outer ±36.87 — outer 가 3배다.</b>
+inner 에서 잡은 개선의 상당수가 outer 에서 사라진다.</p>
+
+<h3>7.4 사전 등록 <span class="tag t-a">채택</span></h3>
+<div class="box intu"><span class="lbl">직관</span>
+결과를 본 뒤에 기준을 정하면 <b>반드시</b> 기준이 결과에 맞춰진다.
+결과를 보기 <b>전에</b> 로그에 적는 것만으로 자기기만의 대부분이 막힌다.</div>
+<div class="box real"><span class="lbl">실측</span> 이 규율을 지킨 실험은 전부 정직한 결론이 나왔고,
+어긴 실험이 <b>실전 −4.1</b>을 냈다.</div>
+
+<h3>7.5 무작위 대조군 <span class="tag t-a">채택</span> ★★</h3>
+<div class="box intu"><span class="lbl">직관</span>
+후보 2,000개를 훑으면 <b>라벨과 아무 관계없는 것</b>도 몇 개는 좋아 보인다.
+그 "우연의 크기"를 이론으로 계산하는 대신 <b>가짜 후보를 같이 넣어 실측</b>한다.
+파이프라인의 실제 자유도를 반영하므로 이론적 보정보다 정확하다.</div>
+<pre><code>for i in range(N_RANDOM):
+    candidates[f'RANDOM:{i}'] = rng.standard_normal(n)   # 또는 무작위 그룹 분할
+threshold = max(사전기준, random_scores.max())</code></pre>
+<div class="box when"><span class="lbl">언제</span> 후보를 <b>10개 이상</b> 훑는 모든 탐색.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span> <b>4.4 축 스윕</b>·<b>9.1 대량 탐색</b>과 분리 불가능.</div>
+<div class="box real"><span class="lbl">실측</span> 두 번의 스윕에서 실후보 최고가
+<b>무작위 최고보다 낮았다</b>(+0.49 vs +0.94, +1.89 vs +2.44).
+대조군이 없었으면 둘 다 "발견"으로 보고됐을 것이다.
+누적 4,833 후보 탐색에서 <b>통과 0</b>.</div>
+
+<h3>7.6 시드 규율 <span class="tag t-a">채택</span></h3>
+<div class="warn"><b>최소 5시드.</b> 2~3시드는 노이즈를 <b>4~5배 과소평가</b>한다.<br>
+이 대회에서 <b>1폴드 × 1시드</b>로 판정하고 출하한 것이 실전 −4.1 의 직접 원인이다.
+사후에 시드만 바꾸니 <b>+6.65 → +3.21</b>로 움직였다.</div>
+<p><b>페어드 부트스트랩</b>: 같은 행에 대한 두 예측의 <b>차이</b>를 부트스트랩한다.
+독립 부트스트랩보다 구간이 훨씬 좁아 작은 차이를 판정할 수 있다.</p>
+
+<h3>7.7 전이비 <span class="tag t-a">채택</span></h3>
+<table><tr><th>변경 유형</th><th class="num">로컬→실전 전이비</th></tr>
+<tr><td>다른 파이프라인 (정직 홀드아웃)</td><td class="num">~1.0</td></tr>
+<tr><td>엔티티 잔차 룩업</td><td class="num">0.76</td></tr>
+<tr><td>블렌드 수준 사후처리</td><td class="num">~0.52</td></tr>
+<tr><td>모델 내부 가중치·캘리브레이션</td><td class="num">~0.16 (순위 불일치)</td></tr></table>
+<p><b>축마다 다르다. 상수 하나로 환산하면 틀린다.</b> 제출할 때마다 (로컬Δ, 실전Δ) 쌍을 기록하라.</p>
+
+<h3>7.8 상한 스크린 <span class="tag t-a">채택</span> ★★ 학습 전에 천장을 잰다</h3>
+<div class="box intu"><span class="lbl">직관</span>
+"이 정보원으로 모델을 만들면 도움이 될까?"를 <b>모델을 만들지 않고</b> 답한다.
+정보원으로 <b>현재 잔차를 직접 회귀</b>해 보면, 그 정보원 위에 세운 어떤 모델도
+그 값을 넘지 못한다. 즉 <b>상한</b>이 나온다.</div>
+<pre><code># 3분할 중첩으로 누출 차단
+#   폴드A+B 학습 → 폴드C 에서 계수 적합 → 폴드D 에서 평가
+gain = skill(chain + β·model.predict(X[D])) − skill(chain)
+rho  = sqrt(gain / (C − base_skill))</code></pre>
+<div class="box when"><span class="lbl">언제</span> 새 모델·새 피처 블록 제안을 받으면 <b>가장 먼저</b>.
+GPU 를 켜기 전에.</div>
+<div class="box syn"><span class="lbl">🔗 시너지</span> <b>6.3 ρ</b>와 한 세트 —
+필요 ρ 를 6.3 으로 계산하고, 가용 ρ 를 7.8 로 측정해 비교한다.</div>
+<div class="box real"><span class="lbl">실측</span>
+물리 77피처 → ρ <b>0.00%</b> &nbsp;|&nbsp; 전체 137피처 → 0.57% &nbsp;|&nbsp;
+원본 43컬럼 → 0.72% &nbsp;|&nbsp; <b>필요치 1.10%</b><br>
+→ 그 방향은 <b>원리상 불가능</b>. 먼저 돌렸으면 GPU 시간을 아꼈다.</div>
+
+<h2 class="pb">8부 · 규정 준수와 누출 탐지</h2>
+
+<h3>8.1 행 독립성 검증 <span class="tag t-a">채택</span> ★★</h3>
+<div class="box intu"><span class="lbl">직관</span>
+"각 행을 독립적으로 예측하라"는 규정을 지켰는지 <b>코드를 읽어서</b> 확인하려면
+전체를 다 읽어야 하고 놓치기 쉽다. 대신 <b>같은 행을 다른 프레임에 담아 넣어보면</b>
+값이 달라지는지로 알 수 있다. <b>행동 검증이 정적 리뷰보다 강하다.</b></div>
+<table><tr><th>검사</th><th>잡는 것</th><th class="num">이 대회 실측</th></tr>
+<tr><td>SHUFFLE 불변성</td><td>행 순서 의존 (rolling / shift / 정렬)</td><td class="num">0.0e+00</td></tr>
+<tr><td>SUBSET 불변성</td><td>프레임 통계 의존 (groupby / 평균 / 분위수)</td><td class="num">4.7e−10</td></tr>
+<tr><td><b>SOLO (1행씩)</b></td><td><b>위 전부 — 가장 강한 검사</b></td><td class="num">7.9e−09</td></tr></table>
+<p>진짜 누출은 <b>1e−3</b> 안팎, 부동소수점 잡음은 <b>1e−9</b> 수준이라 명확히 갈린다.</p>
+<div class="box when"><span class="lbl">언제</span> 대회 <b>1일차</b>. 나중에 붙이면 이미 오염된 것을 못 본다.</div>
+<div class="box con"><span class="lbl">주의</span> 1행 프레임은 <b>CSV dtype 추론</b>이 달라질 수 있다.
+실측: 값이 전부 숫자인 문자열 카테고리 <code>'123'</code>이 1행 프레임에서
+<code>int64</code>로 파싱돼 인코더가 크래시했다. <b>모델 결함이 아니다.</b></div>
+
+<h3>8.2 누출의 유형</h3>
+<table><tr><th>유형</th><th>증상</th><th>탐지</th></tr>
+<tr><td>테스트 프레임 통계 사용</td><td>부분집합 결과가 다름</td><td>SUBSET 검사</td></tr>
+<tr><td>행 순서 의존</td><td>셔플 결과가 다름</td><td>SHUFFLE 검사</td></tr>
+<tr><td>타겟 인코딩 자기누출</td><td>로컬 폭등, 실전 폭락</td><td>OOF 구성 확인</td></tr>
+<tr><td><b>표 생성에 홀드아웃 포함</b></td><td><b>계수가 정상의 10배</b></td><td>계수 크기 확인</td></tr>
+<tr><td>사건 경계 내 미래 정보</td><td>이득이 비정상적으로 큼</td><td>경계 넘는지 확인</td></tr>
+<tr><td>특권 피처</td><td>단독 성능이 비정상적으로 높음</td><td>8.3</td></tr></table>
+<div class="box real"><span class="lbl">실측 — 계수 폭주 신호</span>
+표가 이미 본 폴드에서 계수를 적합하니 <b>정상 0.51 → 4.97</b>이 되고
+정직한 폴드에서 <b>−245</b>가 났다. <b>계수 크기가 예상의 몇 배면 누출을 의심하라.</b></div>
+
+<h3>8.3 특권 피처 판별 <span class="tag t-a">채택</span> ★</h3>
+<div class="warn"><b>판별 원칙: 어떤 모델의 단독 성능이 주력보다 크게 높으면 그 자체가 경고다.</b>
+진짜라면 이미 쓰이고 있었을 것이다.<br><br>
+<b>확인 절차 (4단계)</b><br>
+① 그 모델의 <b>피처 목록·메타데이터</b>를 연다<br>
+② 참조하는 <b>외부 파일</b>을 연다<br>
+③ 그 파일의 <b>행 수가 학습 데이터와 1:1</b>이면 = 각 행의 개별 값 → <b>특권 피처</b><br>
+④ <b>테스트 데이터에 그 컬럼이 있는지</b> — 없으면 배포 자체가 불가능</div>
+<div class="box real"><span class="lbl">실측</span> 교사 3종이 <b>예측 대상 사건 자체의 실측값</b>을 쓰고 있었고,
+그 파일은 <b>학습 데이터와 정확히 1:1</b>이었다.
+포함해 계산한 천장 <b>+113(도달 가능)</b> → 제외하니 <b>+2.1</b>.</div>
+
+<h2 class="pb">9부 · 시너지 지도</h2>
+
+<h3>9.1 시너지 매트릭스</h3>
+<p class="meta">행이 세로축 기법, 열이 가로축 기법. <b>++</b> 강한 상승, <b>+</b> 보완,
+<b>·</b> 무관, <b>−</b> 중복, <b>−−</b> 위험.</p>
+<table class="mx"><tr><th class="l" style="width:22%">＼</th>
+<th>asof<br>분해</th><th>디코딩</th><th>엔티티<br>룩업</th><th>대비<br>타겟</th><th>아핀<br>보정</th>
+<th>셀<br>오프셋</th><th>게이팅</th><th>신경망<br>추가</th><th>고자유도<br>사후처리</th><th>대조군</th></tr>
+<tr><td class="l">as-of 분해</td><td class="n0">—</td><td class="g2">++</td><td class="g2">++</td><td class="g1">+</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="g1">+</td><td class="r1">−</td><td class="n0">·</td></tr>
+<tr><td class="l">라벨 디코딩</td><td class="g2">++</td><td class="n0">—</td><td class="g1">+</td><td class="g2">++</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td></tr>
+<tr><td class="l">엔티티 룩업</td><td class="g2">++</td><td class="g1">+</td><td class="n0">—</td><td class="g2">++</td><td class="g1">+</td><td class="g2">++</td><td class="n0">·</td><td class="n0">·</td><td class="r2">−−</td><td class="g2">++</td></tr>
+<tr><td class="l">대비 타겟</td><td class="g1">+</td><td class="g2">++</td><td class="g2">++</td><td class="n0">—</td><td class="n0">·</td><td class="g1">+</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="g1">+</td></tr>
+<tr><td class="l">아핀 보정</td><td class="n0">·</td><td class="n0">·</td><td class="g1">+</td><td class="n0">·</td><td class="n0">—</td><td class="r1">−</td><td class="n0">·</td><td class="n0">·</td><td class="r1">−</td><td class="n0">·</td></tr>
+<tr><td class="l">셀 오프셋</td><td class="n0">·</td><td class="n0">·</td><td class="g2">++</td><td class="g1">+</td><td class="r1">−</td><td class="n0">—</td><td class="g1">+</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td></tr>
+<tr><td class="l">게이팅 블렌드</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="g1">+</td><td class="n0">—</td><td class="g1">+</td><td class="n0">·</td><td class="n0">·</td></tr>
+<tr><td class="l">신경망 종류 추가</td><td class="g1">+</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="g1">+</td><td class="r2">−−</td><td class="n0">·</td><td class="n0">·</td></tr>
+<tr><td class="l">고자유도 사후처리</td><td class="r1">−</td><td class="n0">·</td><td class="r2">−−</td><td class="n0">·</td><td class="r1">−</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">—</td><td class="g1">+</td></tr>
+<tr><td class="l">무작위 대조군</td><td class="n0">·</td><td class="n0">·</td><td class="g2">++</td><td class="g1">+</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="n0">·</td><td class="g1">+</td><td class="n0">—</td></tr>
+</table>
+
+<h3>9.2 핵심 결합 5종 — 이것만 외워도 된다</h3>
+
+<div class="card"><div class="hd">① 디코딩 → 대비 타겟 → 엔티티 룩업 &nbsp;<span style="font-weight:400;font-size:9pt">(실측 +11.00)</span></div>
+<div class="bd"><div class="dg">누적 컬럼 ──(차분)──▶ 보조 라벨 ──(대비)──▶ 룩업 타겟 ──▶ 로짓 시프트</div>
+<p>디코딩은 <b>단독으로는 점수를 주지 않는다</b>. 룩업에 재료를 공급할 때 비로소 이득이 된다.
+<b>기법을 단독 성능으로 평가하면 이 조합을 놓친다.</b></p></div></div>
+
+<div class="card"><div class="hd">② as-of 분해 + 엔티티 룩업 &nbsp;<span style="font-weight:400;font-size:9pt">(합계 +170)</span></div>
+<div class="bd"><p>둘 다 엔티티 이력을 쓰지만 <b>층이 다르다</b> — 분해는 <b>모델 입력</b>으로,
+룩업은 <b>모델 출력의 사후 보정</b>으로 들어간다. 그래서 겹치지 않는다.
+게다가 분해가 만드는 <b>관측량 컬럼이 룩업의 게이트로 그대로 재사용</b>된다.</p></div></div>
+
+<div class="card"><div class="hd">③ 아핀 보정 + LB 역산 &nbsp;<span style="font-weight:400;font-size:9pt">(실측 +12.9, 그리고 +17.09 기여)</span></div>
+<div class="bd"><p>파라미터가 <b>2개뿐이라</b> 제출 3회로 최적값을 직접 찾을 수 있다.
+<b>자유도가 낮은 기법만이 LB 최적화를 감당한다</b> — 이것이 이 조합의 조건이다.
+자유도가 크면 LB 3점으로는 아무것도 못 정한다.</p></div></div>
+
+<div class="card"><div class="hd">④ 축 스윕 + 무작위 대조군 &nbsp;<span style="font-weight:400;font-size:9pt">(잘못된 채택 2회 방지)</span></div>
+<div class="bd"><p>제3축은 이론으로 못 정하니 훑어야 하는데, 훑으면 우연이 나온다.
+<b>둘은 분리 불가능한 한 세트</b>다. 대조군 없는 스윕은 자기기만 장치다.</p></div></div>
+
+<div class="card"><div class="hd">⑤ ρ 계산 + 상한 스크린 &nbsp;<span style="font-weight:400;font-size:9pt">(GPU 시간 절약)</span></div>
+<div class="bd"><div class="dg">6.3 ρ ──▶ "이 목표에 필요한 ρ 는 1.10%"
+7.8 스크린 ──▶ "이 정보원의 가용 ρ 는 0.00%"
+                    ▼
+              학습하지 않는다</div>
+<p>필요치와 가용치를 <b>같은 단위</b>로 비교한다. 이 대회에서 이 조합이 물리 피처 축을 종결시켰다.</p></div></div>
+
+<h3>9.3 금지 조합 7종</h3>
+<table><tr><th style="width:32%">조합</th><th>왜 위험한가</th><th class="num">실측</th></tr>
+<tr><td><b>고자유도 사후처리 × 시간 외삽</b></td>
+<td>"이 데이터의 오차"가 아니라 <b>"이 기간의 오차"</b>를 외운다. 정직한 분할도 통과한다</td>
+<td class="num">−4.1</td></tr>
+<tr><td><b>타겟 인코딩 × 수축 없음</b></td>
+<td>희소 엔티티의 라벨이 그대로 새어 들어간다</td><td class="num">−929</td></tr>
+<tr><td><b>신경망 × 신경망</b></td>
+<td>서로 상관이 높아(거리 0.005~0.018 &lt; 필요 0.029) 두 번째의 ρ 기여가 0</td>
+<td class="num">−24~−39</td></tr>
+<tr><td><b>같은 계열 룩업 여러 개</b></td>
+<td>표들끼리 상관 &gt;0.90 → 두 번째부터 이득 급감. <b>타겟</b>을 바꿔야 한다</td><td class="num">—</td></tr>
+<tr><td><b>물리 파생 × 기존 집계</b></td>
+<td>집계의 결정함수라 정보가 안 늘고 <b>차원만 늘어 희석</b>된다</td>
+<td class="num">137피처가<br>43피처보다 낮음</td></tr>
+<tr><td><b>증류 × 특권 피처 교사</b></td>
+<td>학생이 흉내낼 수 없는 신호. 이득은 수축이거나 잡음</td><td class="num">정보항 −83.4</td></tr>
+<tr><td><b>GPU × 상한 미측정</b></td>
+<td>연산이 빨라지면 <b>틀린 방향으로도 빨리 간다</b>. GPU 는 탐색 확대가 아니라 <b>검증된 방향의 실행</b> 도구다</td>
+<td class="num">T4 세션<br>다수 낭비</td></tr>
+<tr><td><b>제출 한 번에 두 개 변경</b></td>
+<td>델타 해석 불가 → 슬롯을 쓰고도 아무것도 배우지 못한다</td><td class="num">원인 특정 실패</td></tr>
+</table>
+
+<h3>9.4 기법 의존 그래프</h3>
+<div class="dg">[1.1 2차형식] ──┬──▶ [6.2 최적가중치] ──▶ [6.6 천장] ──▶ 캠페인 계속/중단
+                ├──▶ [6.3 ρ] ◀──────┐
+                └──▶ [7.8 상한스크린]─┘   ──▶ 새 모델 학습 여부
+
+[1.2 노이즈바닥] ──▶ 모든 판정의 단위
+[1.3 자유도]    ──▶ 기법의 생존 여부를 사실상 결정
+
+[3.1 as-of분해] ──▶ 모델 입력 ─┐
+[3.5 디코딩] ──▶ [4.3 대비타겟]─┼─▶ [4.2 엔티티룩업] ──▶ [5.2 로짓시프트]
+[3.6 상태복원] ─────────────────┘                              │
+                                                    [5.1 아핀] ─┴─▶ 최종 예측
+[7.5 대조군] ──▶ [4.4 축스윕]·[9.1 대량탐색]  (없으면 무효)
+[8.1 행독립] ──▶ 모든 제출물  (1일차에 설치)</div>
+
+<h2 class="pb">10부 · 운영</h2>
+
+<h3>10.1 제출물 엔지니어링</h3>
+<table><tr><th class="c" style="width:5%">#</th><th>검사</th><th>없어서 잃은 것</th></tr>
+<tr><td class="c">1</td><td>zip 위생 (캐시·학습데이터 동봉 금지)</td><td>용량·정보 유출</td></tr>
+<tr><td class="c">2</td><td>진입점이 최상위에 있는가</td><td>실행 실패</td></tr>
+<tr><td class="c">3</td><td>모든 <code>.py</code> 구문 검사</td><td><b>슬롯 소실</b></td></tr>
+<tr><td class="c">4</td><td><b>새로 푼</b> 폴더에서 필수 데이터만 두고 실행</td><td>모듈 누락</td></tr>
+<tr><td class="c">5</td><td>출력 행수·범위·NaN·id 중복</td><td>0점</td></tr>
+<tr><td class="c">6</td><td><b>행 정렬 — id 로 reindex 했는가</b></td><td><b>100% 오정렬</b></td></tr>
+<tr><td class="c">7</td><td>두 번 실행해 바이트 동일</td><td>재현 불가</td></tr>
+<tr><td class="c">8</td><td>실행 시간·용량 여유</td><td>타임아웃</td></tr>
+<tr><td class="c">9</td><td><b>의존성 목록을 함부로 바꾸지 않기</b></td><td><b>설치 오류로 전체 실패</b></td></tr></table>
+<div class="warn"><b>6번이 특히 위험하다.</b> 여러 모델을 서브프로세스로 돌려 합치는 구조에서
+각 모델의 출력 <b>순서가 다를 수 있다</b>. <code>.reindex(sub[id])</code> 없이
+<code>.values</code>로 대입하면 <b>전 행이 어긋난다</b>(실측 최대오차 0.5132).<br><br>
+<b>9번 실측</b>: 새 모듈의 로컬 핀을 최상위 의존성 목록에 합치면서 한 줄이 잘못 들어갔고,
+채점 서버에서 <b>설치 오류로 제출이 통째로 실패</b>했다.
+채점 이력이 있는 목록만 쓰고, 일부는 <b>의도적으로 버전을 고정하지 않는다</b>.</div>
+
+<h3>10.2 GPU·클라우드 연산</h3>
+<div class="box intu"><span class="lbl">직관</span>
+GPU 는 <b>"할 수 있는 것"을 늘리지 않는다. "같은 것을 빨리" 할 뿐이다.</b>
+그런데 방향이 틀렸으면 빨리 가는 것이 손해다.
+이 대회에서 GPU 투자 3건 중 <b>2건이 전량 낭비</b>였고,
+그 2건은 <b>몇 분짜리 계산으로 사전에 걸러낼 수 있었다</b>.</div>
+
+<h4>10.2.1 GPU 를 켜기 전에 — 유일하게 중요한 질문</h4>
+<div class="box syn"><span class="lbl">🔗 시너지 — 7.8 상한 스크린</span>
+"이 정보원으로 모델을 만들면 도움이 되는가"는 <b>모델을 만들지 않고</b> 답할 수 있다.
+정보원으로 현재 잔차를 직접 회귀하면 <b>그 위에 세운 어떤 모델도 넘지 못하는 상한</b>이 나온다.
+<b>이 값이 필요치에 못 미치면 GPU 를 켜지 마라.</b></div>
+<div class="dg">[7.8 상한 스크린] ──▶ 가용 ρ = 0.00%
+[6.3 필요 ρ]      ──▶ 필요 ρ = 1.10%
+                          ▼
+                  GPU 를 켜지 않는다   ← 몇 분이면 나오는 판단</div>
+<div class="box real"><span class="lbl">실측</span>
+물리 피처 arm 을 Colab T4 에서 <b>변형 11종</b> 학습했다. 결과는 전부 ρ ≈ 0.
+나중에 상한 스크린을 돌리니 <b>그 블록의 잔차 설명력이 0.00%</b> —
+즉 <b>어떤 모델을 어떻게 학습해도 불가능</b>했고, 그 사실이 몇 분이면 나왔다.</div>
+
+<h4>10.2.2 🚨 GPU ≠ CPU — 판정과 배포는 같은 장치로</h4>
+<p>같은 하이퍼파라미터·같은 데이터인데 <b>다른 모델이 나온다</b>(실측).</p>
+<table><tr><th>비교</th><th class="num">값</th></tr>
+<tr><td>CatBoost GPU vs CPU AUC 차</td><td class="num"><b>+0.02</b></td></tr>
+<tr><td>두 예측의 상관</td><td class="num"><b>0.939</b></td></tr></table>
+<div class="box con"><span class="lbl">함의</span>
+CPU 로 후보를 판정하고 GPU 로 배포하면 <b>"판정한 것과 다른 물건"</b>을 내는 것이다.
+GPU 구현은 히스토그램 분할·부동소수점 누적 순서가 다르고,
+일부 파라미터의 동작(범주형 처리 등)도 CPU 와 다르다.</div>
+
+<h4>10.2.3 클라우드 GPU 운영 (실전 SOP)</h4>
+<div class="warn"><b>pod 6개를 운영하며 확정된 두 규칙</b><br>
+① <b>Secure 등급만 쓴다.</b> 저가(Community) 등급은 4회 중 <b>3회 GPU 불량</b>이었다 —
+<code>nvidia-smi</code> 는 정상으로 보이는데 <code>torch.cuda.is_available()</code> 이 False.
+우회 3종 전부 실패. Secure 는 4/4 정상.<br>
+② <b>중지(stop)하지 말고 종료(terminate)한다.</b> 중지는 GPU 슬롯 반납이라
+재시작이 보장되지 않는다(2회 확인). <b>산출물은 생성 즉시 회수</b>한다.</div>
+<pre><code># ① GPU 실물 확인 — False 면 즉시 종료하고 재생성 (이 한 줄이 시간을 아낀다)
+ssh $H 'python3 -c "import torch;print(torch.cuda.is_available())"'
+# ② 데이터·코드 전송 (로그·캐시 제외)  ③ 의존성은 채점 이력이 있는 목록 그대로
+# ④ 피처 캐시 생성 → 학습 → 산출물 즉시 회수</code></pre>
+<p class="meta">스테이징 약 10분. 전체 명령 시퀀스는 <code>07_GPU_COMPUTE.md</code> §2.3.</p>
+
+<h4>10.2.4 노트북 GPU(Colab 등) 워크플로</h4>
+<div class="warn"><b>두 벌 규격 — 이걸 어기면 측정 자체가 불가능해진다</b>
+<pre><code>(a) 판정용 : 홀드아웃 기간을 제외하고 학습 → 그 기간 예측 .npy
+(b) 배포용 : 전 기간 학습 → 제출물에 탑재</code></pre>
+<b>실측</b>: 배포용만 받았더니 홀드아웃 기간이 in-sample 이라 단독 성능이
+<b>1982</b>(정직 측정 730.9)로 부풀었고, 그 모델의 가치를 <b>잴 수 없었다</b>.</div>
+<div class="box when"><span class="lbl">실무</span>
+· 데이터 업로드가 병목이다 → <b>필요한 컬럼만 슬림 CSV</b>(이 대회 368MB → <b>33.5MB</b>)<br>
+· 세션이 끊기면 산출물이 사라진다 → <b>학습 직후 즉시 다운로드</b><br>
+· 무료 등급 GPU 로도 부스팅 20시드는 충분히 돌아간다</div>
+
+<h4>10.2.5 GPU 투자 결산 — 이 대회</h4>
+<table><tr><th>대상</th><th>투입</th><th>회수</th></tr>
+<tr><td>부스팅 20멤버 (주력 arm)</td><td>클라우드 A40, pod 6개</td><td class="c">✅ 블렌드 한 축</td></tr>
+<tr><td>물리 피처 arm 변형 11종</td><td>노트북 GPU 다수 세션</td><td class="c">❌ ρ 0.00%</td></tr>
+<tr><td>대체 구성 번들</td><td>노트북 GPU</td><td class="c">❌ AUC 0.4985</td></tr></table>
+<div class="box anti"><span class="lbl">⚡ 안티시너지 — 일반 법칙</span>
+<b>GPU × 상한 미측정</b>. 연산이 빨라지면 <b>틀린 방향으로도 빨리 간다</b>.
+GPU 는 "탐색 범위를 넓히는" 도구가 아니라
+"<b>이미 옳다고 판정된 방향</b>을 빨리 실행하는" 도구로 써야 한다.</div>
+
+<h3>10.3 로컬 실행 인프라</h3>
+<table><tr><th style="width:34%">증상</th><th>원인 / 대처</th></tr>
+<tr><td>로그는 쌓이는데 결과가 없음</td><td><b>no-op 스크립트</b>. 로그에 숫자가 없으면 아무것도 안 한 것</td></tr>
+<tr><td>프로세스가 <b>CPU 0.0%</b>로 정지</td><td><b>스레드 라이브러리 데드락</b>. 스레드 수를 1로 강제.<br>
+<b>진단: 느린 게 아니라 죽은 것이다</b></td></tr>
+<tr><td>두 번째 학습부터 죽음</td><td>한 프로세스에서 반복 학습 불가 → <b>학습 1회 = 프로세스 1개</b></td></tr>
+<tr><td>판정과 배포 결과가 다름</td><td><b>GPU ≠ CPU</b> (10.2.2)</td></tr>
+<tr><td>딥러닝 라이브러리 동시 로드 시 세그폴트</td><td>import 순서 조정 또는 프로세스 분리</td></tr>
+<tr><td>grep 이 조용히 아무것도 안 함</td><td>셸이 와일드카드를 먼저 확장 → <code>find -exec</code></td></tr></table>
+<pre><code>export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 KMP_DUPLICATE_LIB_OK=TRUE</code></pre>
+
+<h3>10.4 다중 에이전트 운용</h3>
+<ol>
+<li><b>실행자와 판정자를 분리</b>한다. 자기 결과를 자기가 판정하면 낙관 편향이 걸린다.</li>
+<li><b>SSOT 파일 하나</b>에 모든 판정을 append — 중복 실험 방지.</li>
+<li><b>판정 게이트를 코드로 고정</b>한다.</li>
+<li><b>산출물 접수 규격</b>: 새 모델은 <b>두 벌</b>(판정용 홀드아웃 예측 + 배포용).
+<b>홀드아웃 점수가 없는 산출물은 접수하지 않는다.</b></li>
+<li>에이전트 리포트는 <b>기본 미검증</b>. 직접 재현한 수치만 인용.</li>
+<li>조작이 발견되면 <b>격리 + 라벨</b>. 삭제하지 않는다(지우면 같은 주장이 돌아온다).</li>
+</ol>
+<div class="warn"><b>🚨 조작 리포트 판별 (실제 111건 격리)</b><br>
+· 존재하지 않는 채점 결과를 <b>소수점까지</b> 인용 &nbsp;·&nbsp;
+<b>빈 f-string</b>(숫자를 계산하지 않고 적었다는 증거)<br>
+· 재현 불가능한 수치 &nbsp;·&nbsp; 이모지·"공식"·"검증 완료" 같은 <b>과잉 수사</b></div>
+
+<h2 class="pb">11부 · 실행 순서</h2>
+
+<h3>11.1 대회 진행 순서</h3>
+<table><tr><th class="c" style="width:6%">단계</th><th style="width:26%">할 일</th><th>왜 이 순서인가</th></tr>
+<tr><td class="c">0</td><td>규정에서 금지·<b>허용</b> 항목 특정</td><td>허용을 늦게 알면 손해다</td></tr>
+<tr><td class="c">1</td><td><b>행 독립성 하네스 설치</b></td><td>나중에 붙이면 이미 오염된 것을 못 본다</td></tr>
+<tr><td class="c">2</td><td>GBDT 기준선 + 5시드</td><td>신경망은 여기가 선 뒤에</td></tr>
+<tr><td class="c">3</td><td><b>노이즈 바닥 측정</b></td><td>이후 모든 판정의 단위가 된다</td></tr>
+<tr><td class="c">4</td><td>폴드 설계 + 레짐 점검</td><td>예측 시계를 배포와 맞춘다</td></tr>
+<tr><td class="c">5</td><td><b>as-of 분해</b></td><td>이 대회 최대 이득 (+146.8)</td></tr>
+<tr><td class="c">6</td><td><b>엔티티 잔차 룩업</b></td><td>두 번째 이득 (+23.3). 5요소 준수</td></tr>
+<tr><td class="c">7</td><td>디코딩 + <b>상한 스크린</b></td><td>새 정보원 발굴, 학습 전 판정</td></tr>
+<tr><td class="c">8</td><td>앙상블 (ρ 로 채택 판단)</td><td>종이 계산으로 실험 대체</td></tr>
+<tr><td class="c">9</td><td>캘리브레이션 (LB 역산)</td><td>자유도 낮은 것부터</td></tr>
+<tr><td class="c">10</td><td>제출 (한 번에 하나만)</td><td>델타가 그 축의 순수 신호</td></tr></table>
+
+<h3>11.2 상황별 처방</h3>
+<table><tr><th style="width:38%">상황</th><th>먼저 볼 것</th></tr>
+<tr><td>로컬은 오르는데 실전이 안 오름</td><td>7.7 전이비 → 7.1 폴드 설계 → 7.6 시드</td></tr>
+<tr><td>새 모델을 만들지 말지 모르겠음</td><td><b>7.8 상한 스크린</b> (학습 전에)</td></tr>
+<tr><td>블렌드가 안 오름</td><td>6.3 ρ. "다양성 키우기"는 레버가 아니다</td></tr>
+<tr><td>후보가 너무 많음</td><td>7.5 무작위 대조군 + 닫힌형 판정</td></tr>
+<tr><td>어떤 모델이 비정상적으로 좋음</td><td><b>8.3 특권 피처 확인</b></td></tr>
+<tr><td>개선인지 우연인지 모르겠음</td><td>1.2 노이즈 바닥 + 7.6 5시드</td></tr>
+<tr><td>제출했는데 0점</td><td>10.1 체크리스트 9항목</td></tr>
+<tr><td>엔티티가 반복 등장함</td><td><b>4.2 이중 중심화 룩업</b></td></tr>
+<tr><td>누적·이동평균 컬럼이 있음</td><td><b>3.5 라벨 디코딩</b></td></tr>
+<tr><td>시대·시즌이 나뉨</td><td>7.2 레짐 점검 → 분리 채점</td></tr>
+<tr><td>캠페인을 접어야 하나</td><td>6.6 라이브러리 천장</td></tr>
+<tr><td><b>GPU 를 쓸지 말지</b></td><td><b>10.2.1</b> — 상한 스크린 먼저. ρ 미달이면 켜지 마라</td></tr>
+<tr><td>클라우드 GPU 가 불안정</td><td>10.2.3 — Secure 등급만, stop 대신 terminate</td></tr></table>
+
+<h3>11.3 기법별 기대 이득 (이 대회 실측)</h3>
+<table><tr><th>기법</th><th class="num">이득</th><th class="c">성격</th></tr>
+<tr><td>as-of 분해 피처</td><td class="num">+146.8</td><td class="c">구조적</td></tr>
+<tr><td>독립 파이프라인 결합</td><td class="num">+38.5</td><td class="c">구조적</td></tr>
+<tr><td>신경망 1종 블렌딩</td><td class="num">+36.2</td><td class="c">구조적</td></tr>
+<tr><td>엔티티 잔차 룩업 (+대비 타겟)</td><td class="num">+22.8</td><td class="c">구조적</td></tr>
+<tr><td>상태 복원</td><td class="num">+17.1</td><td class="c">구조적</td></tr>
+<tr><td>제3 모델 추가</td><td class="num">+7.6</td><td class="c">구조적</td></tr>
+<tr><td>아핀 캘리브레이션</td><td class="num">+5.0</td><td class="c">미세조정</td></tr>
+<tr><td>블렌드 비율 조정</td><td class="num">+1.7</td><td class="c">미세조정</td></tr>
+<tr><td>시드 수 증가</td><td class="num">−12 ~ +2</td><td class="c">미세조정</td></tr></table>
+
+<div class="card"><div class="hd">마지막 세 줄</div><div class="bd">
+<p><b>1. 구조적 변경만 +15 이상을 낸다.</b> 미세조정에 시간을 쓰는 것은 거의 항상 손해다.</p>
+<p><b>2. 자유도가 기법의 운명을 결정한다.</b> 정직한 검증을 통과해도 자유도가 크면 실전에서 죽는다.</p>
+<p><b>3. 정직한 null 은 훌륭한 결과다.</b> 이 대회에서 20+ 축을 빨리 닫은 것이
+결과적으로 가장 생산적인 작업이었다. 억지로 성공을 만들면 슬롯과 시간을 잃는다.</p>
+</div></div>
+
+<hr>
+<p class="meta">실행 가능한 도구 — <code>reusable_toolkit/</code>: 제출 0점 점검 · 행 독립성 감사 · 블렌드 계산기
+(전부 실제 제출물로 동작 검증 완료)<br>
+기법 카탈로그 44종(채택 24 · 기각 16 · 보류 4) — <code>playbook/</code>:
+<code>python3 run.py list</code></p>
+</body></html>

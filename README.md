@@ -45,6 +45,26 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 
 ---
 
+## 기술 스택
+
+<img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white"/> <img src="https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white"/> <img src="https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white"/> <img src="https://img.shields.io/badge/SciPy-8CAAE6?style=flat-square&logo=scipy&logoColor=white"/> <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white"/> <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white"/> <img src="https://img.shields.io/badge/LightGBM-9ACD32?style=flat-square"/> <img src="https://img.shields.io/badge/XGBoost-006ACC?style=flat-square"/> <img src="https://img.shields.io/badge/CatBoost-FFCC00?style=flat-square&logoColor=black"/> <img src="https://img.shields.io/badge/Colab-F9AB00?style=flat-square&logo=googlecolab&logoColor=white"/>
+
+| 구분 | 사용 | 어디에 |
+| :--- | :--- | :--- |
+| **모델** | LightGBM · XGBoost · CatBoost | GBDT 서브모델 (분류/회귀 두 목적함수) |
+| | PyTorch | MLP 서브모델 5-seed 블렌딩 (**+36.2**) |
+| | scikit-learn | 아핀 캘리브레이션 · 지표 · 분할 |
+| **데이터** | Pandas · NumPy | 147만 행 × 48피처 전처리, as-of 분해 (**+146.8**) |
+| | SciPy | logit/sigmoid 변환 · 최적화 · 통계 검정 |
+| | joblib | 아티팩트 직렬화 (모델 25개 봉인) |
+| **실행** | Google Colab (T4/A100) | GPU 학습 — 판정용·배포용 두 벌 규격 |
+| **검증** | numpy + pandas **only** | `toolkit/` 3종은 의존성을 최소로 유지 |
+
+> `toolkit/` 을 numpy·pandas만으로 묶은 것은 의도적입니다 — 다른 대회 저장소에
+> 파일만 복사해 넣으면 바로 돌아가야 하기 때문입니다.
+
+---
+
 ## 담당 범위
 
 5인 규모 팀 프로젝트에서 **예측 파이프라인 한 축(A arm)과 실험·검증 체계**를 맡았습니다.

@@ -48,6 +48,8 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 ## 기술 스택
 
 <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white"/> <img src="https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white"/> <img src="https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white"/> <img src="https://img.shields.io/badge/SciPy-8CAAE6?style=flat-square&logo=scipy&logoColor=white"/> <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white"/> <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white"/> <img src="https://img.shields.io/badge/LightGBM-9ACD32?style=flat-square"/> <img src="https://img.shields.io/badge/XGBoost-006ACC?style=flat-square"/> <img src="https://img.shields.io/badge/CatBoost-FFCC00?style=flat-square&logoColor=black"/> <img src="https://img.shields.io/badge/Colab-F9AB00?style=flat-square&logo=googlecolab&logoColor=white"/>
+<br/>
+<img src="https://img.shields.io/badge/Feature%20Engineering-4B8BBE?style=flat-square"/> <img src="https://img.shields.io/badge/Ensemble%20Learning-6E40C9?style=flat-square"/> <img src="https://img.shields.io/badge/Time%20Series%20CV-2E8B57?style=flat-square"/> <img src="https://img.shields.io/badge/Model%20Calibration-B7472A?style=flat-square"/> <img src="https://img.shields.io/badge/Data%20Leakage%20Audit-A0522D?style=flat-square"/>
 
 | 구분 | 사용 | 어디에 |
 | :--- | :--- | :--- |
@@ -62,6 +64,16 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 
 > `toolkit/` 을 numpy·pandas만으로 묶은 것은 의도적입니다 — 다른 대회 저장소에
 > 파일만 복사해 넣으면 바로 돌아가야 하기 때문입니다.
+
+### 역량 배지가 가리키는 실제 코드
+
+| 배지 | 이 저장소에서 | 근거 |
+| :--- | :--- | ---: |
+| **Feature Engineering** | `src/pipeline/agent2_asof_decomp2.py` — as-of 누적 피처 46개 분해 | **+146.8** |
+| **Ensemble Learning** | `src/pipeline/ensemble_optimize.py` · `toolkit/blend_math.py` — 25모델 블렌드, 2차형식 닫힌 해 | **+36.2** |
+| **Time Series CV** | `playbook/methods/validation.py` — 시즌 경계 3분할, 레짐 붕괴 구간 제외 | 폴드↔LB 오차 3.03 |
+| **Model Calibration** | `playbook/methods/calibration.py` — 아핀 보정 (파라미터 2개) | **+12.9** |
+| **Data Leakage Audit** | `toolkit/check_row_independence.py` — FULL/SHUFFLE/SUBSET/SOLO 행동 검증 | 누출 2.6e-09 |
 
 ---
 

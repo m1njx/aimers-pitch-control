@@ -92,6 +92,11 @@ ssh $K -p $P $H 'cd /workspace/repo && python3 experiments/v11_cli/build_cache.p
 
 ## 3. Colab 워크플로
 
+> **실행 주체**: 아래 Colab 학습은 **내가 직접 실행**했다.
+> 스크립트는 `code/gpu_colab/`, 회수한 산출물은 `~/LG_data/my_gpu_runs/` 에 있다.
+> 클라우드(RunPod) 운영은 팀 공동 파트다.
+
+
 내가 쓴 스크립트: `code/gpu_colab/` (5종)
 
 | 파일 | 용도 |

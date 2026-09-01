@@ -16,8 +16,9 @@ evaluated by Brier Skill Score. This repository contains **my part** of a 5-pers
   submission sanity checks, row-independence auditing, and closed-form blend math.
 - **`playbook/`** — a catalog of **44 techniques** with runnable code and verdicts
   (24 adopted, 16 rejected, 4 shelved). Failed techniques are kept, with evidence.
-- **`study_guide/`** — a 27-page methodology reference including a synergy matrix
-  and seven combinations that must be avoided.
+- **`study_guide/`** — two study references: a **32-page** methodology guide
+  (with a synergy matrix and seven combinations to avoid) and a **14-page** primer on
+  deep learning, transformers, LLM agents, convex optimization and decision-focused learning.
 
 Documentation is in Korean.
 </details>
@@ -60,6 +61,7 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 | 3-way 목적함수 앙상블 (분류/회귀/MLP) | +12.5 |
 | 아핀 캘리브레이션 | +12.9 |
 | 팀 기법 독립 검증 + 확장 축 18종 판정 | (기각 확정) |
+| GPU 학습 실행 · 두 벌 규격 확립 | (판정 체계 확보) |
 | 최종 담당 파이프라인 | **1,032.14** |
 
 **as-of 분해 피처(+146.8)는 이 대회 전체에서 단일 변경 최대 이득**이었습니다.
@@ -80,6 +82,7 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 │   │   ├── ensemble_optimize.py         블렌드 가중치 탐색
 │   │   └── script.py                    추론 진입점
 │   ├── analysis/      실험 분석 스크립트 (16종)
+│   ├── gpu_colab/     Colab T4 학습 스크립트 (5종) — 판정용·배포용 두 벌 규격
 │   └── experiments/   실험 코드 480종
 │
 ├── toolkit/           ⭐ 대회 무관 재사용 도구 (동작 검증 완료)
@@ -90,7 +93,9 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 ├── playbook/          ⭐ 기법 카탈로그 44종 (채택 24 · 기각 16 · 보류 4)
 │   └── run.py                      python3 run.py list
 │
-├── study_guide/       ⭐ 방법론 학습자료 PDF (27쪽)
+├── study_guide/       ⭐ 학습자료 PDF 2종
+│   ├── 방법론_학습자료.pdf            32쪽 — 기초 개념 + 기법 44종 + 시너지 매트릭스
+│   └── 딥러닝_LLM_최적화_정리.pdf     14쪽 — 이론과 대회 경험의 연결
 └── docs/              방법론 · 교훈 · 검증 · GPU
 ```
 
@@ -132,10 +137,17 @@ python3 run.py list --status REJECTED    # 실패한 것만
 python3 run.py show <id>                 # 근거·주의사항·구현 위치
 ```
 
-### 3. 방법론 학습자료 (`study_guide/`, 27쪽)
+### 3. 학습자료 (`study_guide/`, PDF 2종)
 
-각 기법을 **직관 → 형식 → 구현 → 장단점 → 🔗시너지 → ⚡안티시너지 → 실측** 형식으로 정리했습니다.
-10×10 시너지 매트릭스와 금지 조합 7종을 포함합니다.
+**`방법론_학습자료.pdf` (32쪽)** — 각 기법을
+**직관 → 형식 → 구현 → 장단점 → 🔗시너지 → ⚡안티시너지 → 실측** 형식으로 정리했습니다.
+0부에 결정 트리·앙상블·부스팅·GBDT 기초를 두고, 9부에 **10×10 시너지 매트릭스**와
+**금지 조합 7종**을 실었습니다.
+
+**`딥러닝_LLM_최적화_정리.pdf` (14쪽)** — 트랜스포머·LLM·에이전트·볼록 최적화·
+의사결정 중심 학습(DFL)·시계열. 마지막 장에서 **각 이론이 대회 경험을 어떻게 설명하는지**
+연결했습니다 — 예를 들어 DFL의 *"예측 오차 최소화 ≠ 최적 의사결정"*은
+*"단독 성능 최대화 ≠ 블렌드 기여 최대화"*와 같은 구조입니다.
 
 ---
 

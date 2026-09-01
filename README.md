@@ -2,7 +2,7 @@
 
 **투구 제구 성공 확률 예측 — 모델링 파이프라인과 방법론**
 
-<sub>2026 LG Aimers 9기 해커톤 · 담당 파이프라인 Public LB **1,032.14** · 팀 최종 1,113.12</sub>
+<sub>2026 LG Aimers 9기 해커톤 · 본인 최고 Public LB **1,114.74** · 팀 최종 1,130.16</sub>
 
 <details>
 <summary><b>English summary</b></summary>
@@ -10,7 +10,8 @@
 Pitch-control success probability prediction (binary classification, 1.47M rows × 48 features),
 evaluated by Brier Skill Score. This repository contains **my part** of a 5-person team project:
 
-- **`src/pipeline/`** — a 25-model GBDT + MLP ensemble (Public LB 1,032.14). The largest single
+- **`src/pipeline/`** — a 25-model GBDT + MLP ensemble (LB 1,032.14 standalone; my best full
+  submission scored **1,114.74** and held the team record when submitted). The largest single
   gain in the whole competition came from **decomposing as-of cumulative features** (+146.8).
 - **`toolkit/`** — three competition-agnostic tools, verified against real submissions:
   submission sanity checks, row-independence auditing, and closed-form blend math.
@@ -37,8 +38,9 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 | :--- | :--- |
 | 과제 | 투구별 제구 성공 확률 예측 (이진 분류, 147만 행 × 48피처) |
 | 평가 | Brier Skill Score |
-| **담당 파이프라인 Public LB** | **1,032.14** |
-| 팀 최종 Public LB | 1,113.12 |
+| **본인 최고 Public LB** | **1,114.74** (`v92` — 제출 시점 팀 최고 기록) |
+| 담당 파이프라인(A arm) 단독 | 1,032.14 |
+| 팀 최종 Public LB | 1,130.16 |
 | 기간 | 2026-08-06 ~ 09-01 |
 
 ---
@@ -62,7 +64,8 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 | 아핀 캘리브레이션 | +12.9 |
 | 팀 기법 독립 검증 + 확장 축 18종 판정 | (기각 확정) |
 | GPU 학습 실행 · 두 벌 규격 확립 | (판정 체계 확보) |
-| 최종 담당 파이프라인 | **1,032.14** |
+| A arm 단독 최고 | 1,032.14 |
+| **전체 빌드 최고 (`v92`, 블렌드 가중치 재조정)** | **1,114.74** |
 
 **as-of 분해 피처(+146.8)는 이 대회 전체에서 단일 변경 최대 이득**이었습니다.
 상세: [docs/01_MY_CONTRIBUTION.md](docs/01_MY_CONTRIBUTION.md)
@@ -91,6 +94,9 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 │   └── blend_math.py               앙상블 닫힌형 계산
 │
 ├── playbook/          ⭐ 기법 카탈로그 44종 (채택 24 · 기각 16 · 보류 4)
+│   ├── methods/                    기법 구현 (features · lookups · calibration ·
+│   │                               ensemble · validation · rejected)
+│   ├── config.py                   새 대회에 맞춰 이 파일만 고친다
 │   └── run.py                      python3 run.py list
 │
 ├── study_guide/       ⭐ 학습자료 PDF 2종

@@ -147,7 +147,7 @@ SimpleMLP 5-seed를 가중 0.32로 결합했습니다.
 | `toolkit/check_row_independence.py` | 행 독립성 규정 위반을 **행동으로** 검출 |
 | `toolkit/check_submission.py` | 제출물 0점 방지 8항목 |
 | `toolkit/blend_math.py` | 앙상블 기여도를 **학습 없이** 계산 |
-| `playbook/` | 기법 50종의 판정 결과 카탈로그 |
+| `playbook/` | 기법 52종의 판정 결과 카탈로그 |
 
 ### 상한 스크린 — 학습 전에 천장을 재는 방법
 

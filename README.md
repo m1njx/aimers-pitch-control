@@ -15,8 +15,8 @@ evaluated by Brier Skill Score. This repository contains **my part** of a 5-pers
   gain in the whole competition came from **decomposing as-of cumulative features** (+146.8).
 - **`toolkit/`** — three competition-agnostic tools, verified against real submissions:
   submission sanity checks, row-independence auditing, and closed-form blend math.
-- **`playbook/`** — a catalog of **50 techniques** with runnable code and verdicts
-  (29 adopted, 17 rejected, 4 shelved). Failed techniques are kept, with evidence.
+- **`playbook/`** — a catalog of **52 techniques** with runnable code and verdicts
+  (31 adopted, 17 rejected, 4 shelved). Failed techniques are kept, with evidence.
 - **`study_guide/`** — two study references: a **32-page** methodology guide
   (with a synergy matrix and seven combinations to avoid) and a **14-page** primer on
   deep learning, transformers, LLM agents, convex optimization and decision-focused learning.
@@ -29,7 +29,7 @@ git clone https://github.com/m1njx/aimers-pitch-control.git
 cd aimers-pitch-control
 
 python3 toolkit/blend_math.py --demo      # 자기검증 3종
-cd playbook && python3 run.py list        # 기법 50종 카탈로그
+cd playbook && python3 run.py list        # 기법 52종 카탈로그
 ```
 
 ---
@@ -127,14 +127,14 @@ cd playbook && python3 run.py list        # 기법 50종 카탈로그
 │   ├── check_row_independence.py   행 독립성 규정 위반 검출
 │   └── blend_math.py               앙상블 닫힌형 계산
 │
-├── playbook/          ⭐ 기법 카탈로그 50종 (채택 29 · 기각 17 · 보류 4)
+├── playbook/          ⭐ 기법 카탈로그 52종 (채택 31 · 기각 17 · 보류 4)
 │   ├── methods/                    기법 구현 (features · lookups · calibration ·
 │   │                               ensemble · trees · neural · validation · rejected)
 │   ├── config.py                   새 대회에 맞춰 이 파일만 고친다
 │   └── run.py                      python3 run.py list
 │
 ├── study_guide/       ⭐ 학습자료 PDF 2종
-│   ├── 방법론_학습자료.pdf            32쪽 — 기초 개념 + 기법 50종 + 시너지 매트릭스
+│   ├── 방법론_학습자료.pdf            32쪽 — 기초 개념 + 기법 52종 + 시너지 매트릭스
 │   └── 딥러닝_LLM_최적화_정리.pdf     14쪽 — 이론과 대회 경험의 연결
 └── docs/              방법론 · 교훈 · 검증 · GPU
 ```
@@ -167,12 +167,12 @@ python3 toolkit/blend_math.py --demo
 
 ### 2. 기법 카탈로그 (`playbook/`)
 
-시도한 기법 50종을 **실행 가능한 코드 + 판정 근거**로 정리했습니다.
+시도한 기법 52종을 **실행 가능한 코드 + 판정 근거**로 정리했습니다.
 **실패한 기법도 코드로 남겼습니다** — 지운 기법은 반드시 누군가 다시 제안하기 때문입니다.
 
 ```bash
 cd playbook
-python3 run.py list                      # 50종 (✅29 ❌17 ⏸4)
+python3 run.py list                      # 52종 (✅31 ❌17 ⏸4)
 python3 run.py list --status REJECTED    # 실패한 것만
 python3 run.py show <id>                 # 근거·주의사항·구현 위치
 ```

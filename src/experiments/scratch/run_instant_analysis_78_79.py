@@ -71,7 +71,7 @@ with open(RAW_DIR / 'task2_predictability_ceiling_summary.json', 'w', encoding='
     json.dump(t2_ceiling_summary, f, indent=2, ensure_ascii=False)
 
 # 3. Write 78_stacking_ensemble.md
-doc_78 = f"""# 78. 스태킹(Stacking) 앙상블 시도 보고서
+doc_78 = """# 78. 스태킹(Stacking) 앙상블 시도 보고서
 
 - **작성 일시**: {NOW_STR}
 - **목적**: 기존 가중 평균(Weighted Blending) 방식 대신 Base Models(LightGBM, CatBoost, XGBoost)의 Out-Of-Fold(OOF) 예측값을 메타 피처로 활용하는 Stacking 앙상블을 구축하고, Nested Validation(Inner Brier 2022-23)으로 실질 개선 여부를 정밀 검증.
@@ -118,7 +118,7 @@ with open(OUTPUTS_DIR / '78_stacking_ensemble.md', 'w', encoding='utf-8') as f:
     f.write(doc_78)
 
 # 4. Write 79_predictability_ceiling.md
-doc_79 = f"""# 79. 타겟(control_success) 예측 가능 한계(Predictability Ceiling) 보고서
+doc_79 = """# 79. 타겟(control_success) 예측 가능 한계(Predictability Ceiling) 보고서
 
 - **작성 일시**: {NOW_STR}
 - **목적**: KBO 투구 제구 성공여부(`control_success`) 타겟의 통계적/이론적 한계(Bayes Optimal Error)를 수치 분석하여, 현재 SOTA 점수(859.63점)의 위치와 1,000점 달성 불가능성에 대한 과학적 근거 제시.

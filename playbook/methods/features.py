@@ -109,3 +109,73 @@ def state_correction(p, j, s, ok, b=1.2, K=20.0):
 def check_determinism(df, new_feature: str, join_keys: list) -> float:
     """새 파생 피처가 기존 조인키의 결정함수인가? 반환값 0 이면 **정보량 0**."""
     return float(df.groupby(join_keys)[new_feature].std().max())
+
+
+# ─────────────────────────────────────────────────────────────
+# 아래 두 기법은 A arm 에 **출하됐지만 단독 이득을 분리 측정하지 않았다.**
+# 정직하게 그렇게 적어 둔다 — "썼다" 와 "효과를 쟀다" 는 다르다.
+# ─────────────────────────────────────────────────────────────
+
+@method(id='feat.cfa_latent', stage=5, status='ADOPTED', cost='low',
+        title='이론 지정 잠재변수 (확인적 요인분석, CFA)',
+        gain='A arm 에 잠재변수 4개로 출하. ⚠️ 단독 이득은 분리 측정하지 않았다',
+        evidence='탐색적 PCA 와 달리 **어떤 관측변수가 어떤 요인에 실리는지 사전 지정**한다. '
+                 '요인이 도메인 개념(투수 역량·경기 압박·투구 물리·카운트 상태)에 대응해 해석 가능',
+        requires=['context_cols'],
+        note='⚠️ 이 대회에서 A/B 로 분리 측정하지 않은 채 출하했다. 다음엔 반드시 단독으로 재라 — '
+             '측정 안 한 피처는 "효과가 있었다" 고 말할 수 없다. '
+             'GBDT 는 원 피처에서 상호작용을 스스로 찾으므로 요인 축약의 순이득은 작을 수 있다.')
+def cfa_latent(df, spec: dict, n_iter=1000, random_state=0):
+    """spec = {'요인명': [관측변수, ...]} — 요인마다 1-factor 모델을 적합해 점수를 만든다.
+
+    train 에서 fit 한 스케일러·요인모델을 그대로 test 에 적용해야 행 독립이 유지된다.
+    반환: (요인점수 DataFrame, 적합된 객체 dict)
+    """
+    import pandas as pd
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import FactorAnalysis
+
+    scores, fitted = {}, {}
+    for name, cols in spec.items():
+        cols = [c for c in cols if c in df.columns]
+        if not cols:
+            continue
+        Z = df[cols].astype(float)
+        Z = Z.fillna(Z.median())
+        sc = StandardScaler().fit(Z)
+        fa = FactorAnalysis(n_components=1, max_iter=n_iter,
+                            random_state=random_state).fit(sc.transform(Z))
+        scores[name] = fa.transform(sc.transform(Z))[:, 0]
+        fitted[name] = (cols, sc, fa)
+    return pd.DataFrame(scores, index=df.index), fitted
+
+
+@method(id='feat.interaction_by_theory', stage=5, status='ADOPTED', cost='low',
+        title='이론이 지정한 상호작용 항 (곱 피처)',
+        gain='A arm 에 출하. ⚠️ 단독 이득은 분리 측정하지 않았다',
+        evidence='트리는 상호작용을 분할로 근사하지만 **연속적인 곱**은 잘 못 만든다. '
+                 '도메인이 "이 셋이 동시에 성립할 때"를 지목해 주면 곱으로 넣어 준다',
+        requires=['context_cols'],
+        note='이 대회에선 게임이론 관점의 곱 2종을 넣었다 — '
+             '(압박 × 접전 × 투수능력), (2아웃 × 득점권 × 레버리지 × 투수능력). '
+             '⚠️ 곱 피처는 값이 커지기 쉽고 결측 전파가 빠르다. NaN 을 명시적으로 채울 것.')
+def interaction_by_theory(df, terms: dict, fill=0.5):
+    """terms = {'새피처명': [컬럼 또는 (컬럼, 변환함수), ...]} — 지정한 항들의 곱.
+
+    예: {'gt_pressure_perf': [('li', np.log1p), 'closeness', 'pitcher_success']}
+    """
+    import numpy as np
+    import pandas as pd
+    out = {}
+    for name, parts in terms.items():
+        v = np.ones(len(df))
+        for p in parts:
+            col, fn = p if isinstance(p, tuple) else (p, None)
+            if col not in df.columns:
+                v = None
+                break
+            x = df[col].astype(float).fillna(fill).to_numpy()
+            v = v * (fn(x) if fn else x)
+        if v is not None:
+            out[name] = v
+    return pd.DataFrame(out, index=df.index)

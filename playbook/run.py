@@ -33,9 +33,12 @@ STAGES = [
         'SSOT 로그 파일 하나를 정하고 모든 판정을 append 하기 시작',
         '⚠️ 나중에 붙이면 이미 오염된 것을 못 본다']),
     (2, 'GBDT 기준선', [
-        'LightGBM / CatBoost / XGBoost 기준선 각각',
+        'LightGBM / CatBoost / XGBoost 기준선 각각 (gbdt.library_trio)',
+        '  → 목적함수를 분류/회귀 두 벌로 (gbdt.objective_split) — 가장 싼 다양성',
         '시드 5개로 예측 배깅 (ens.seed_bagging)',
-        '⚠️ 신경망은 아직. GBDT 가 서기 전에는 의미 없다',
+        'GBDT 가 선 뒤에 MLP 한 종 추가 (nn.mlp_member) — 이 대회 +36.24',
+        '  → 목적함수를 나눠 멤버를 늘린다 (nn.multi_objective) — 구현 비용 거의 0',
+        '  → ⚠️ 종류는 늘리지 말 것. ResNet/Transformer/TabNet/TabM 전부 음수였다',
         '⚠️ "권장 설정"을 믿지 말 것 — 이 대회는 cat_features 지정이 −15.49 였다']),
     (3, '노이즈 바닥 측정 ★', [
         '동일 설정을 시드만 바꿔 5회 이상 (val.noise_floor)',

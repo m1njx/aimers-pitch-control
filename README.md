@@ -15,8 +15,8 @@ evaluated by Brier Skill Score. This repository contains **my part** of a 5-pers
   gain in the whole competition came from **decomposing as-of cumulative features** (+146.8).
 - **`toolkit/`** — three competition-agnostic tools, verified against real submissions:
   submission sanity checks, row-independence auditing, and closed-form blend math.
-- **`playbook/`** — a catalog of **44 techniques** with runnable code and verdicts
-  (24 adopted, 16 rejected, 4 shelved). Failed techniques are kept, with evidence.
+- **`playbook/`** — a catalog of **50 techniques** with runnable code and verdicts
+  (29 adopted, 17 rejected, 4 shelved). Failed techniques are kept, with evidence.
 - **`study_guide/`** — two study references: a **32-page** methodology guide
   (with a synergy matrix and seven combinations to avoid) and a **14-page** primer on
   deep learning, transformers, LLM agents, convex optimization and decision-focused learning.
@@ -29,7 +29,7 @@ git clone https://github.com/m1njx/aimers-pitch-control.git
 cd aimers-pitch-control
 
 python3 toolkit/blend_math.py --demo      # 자기검증 3종
-cd playbook && python3 run.py list        # 기법 44종 카탈로그
+cd playbook && python3 run.py list        # 기법 50종 카탈로그
 ```
 
 ---
@@ -49,7 +49,7 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 
 <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white"/> <img src="https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white"/> <img src="https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white"/> <img src="https://img.shields.io/badge/SciPy-8CAAE6?style=flat-square&logo=scipy&logoColor=white"/> <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white"/> <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white"/> <img src="https://img.shields.io/badge/LightGBM-9ACD32?style=flat-square"/> <img src="https://img.shields.io/badge/XGBoost-006ACC?style=flat-square"/> <img src="https://img.shields.io/badge/CatBoost-FFCC00?style=flat-square&logoColor=black"/> <img src="https://img.shields.io/badge/Colab-F9AB00?style=flat-square&logo=googlecolab&logoColor=white"/>
 <br/>
-<img src="https://img.shields.io/badge/Feature%20Engineering-4B8BBE?style=flat-square"/> <img src="https://img.shields.io/badge/Ensemble%20Learning-6E40C9?style=flat-square"/> <img src="https://img.shields.io/badge/Time%20Series%20CV-2E8B57?style=flat-square"/> <img src="https://img.shields.io/badge/Model%20Calibration-B7472A?style=flat-square"/> <img src="https://img.shields.io/badge/Data%20Leakage%20Audit-A0522D?style=flat-square"/>
+<img src="https://img.shields.io/badge/Feature%20Engineering-4B8BBE?style=flat-square"/> <img src="https://img.shields.io/badge/Ensemble%20Learning-6E40C9?style=flat-square"/> <img src="https://img.shields.io/badge/Time%20Series%20CV-2E8B57?style=flat-square"/> <img src="https://img.shields.io/badge/Model%20Calibration-B7472A?style=flat-square"/> <img src="https://img.shields.io/badge/Data%20Leakage%20Audit-A0522D?style=flat-square"/> <img src="https://img.shields.io/badge/Deep%20Learning-D14836?style=flat-square"/> <img src="https://img.shields.io/badge/Gradient%20Boosting-2C8C4A?style=flat-square"/>
 
 | 구분 | 사용 | 어디에 |
 | :--- | :--- | :--- |
@@ -74,6 +74,8 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 | **Time Series CV** | `playbook/methods/validation.py` — 시즌 경계 3분할, 레짐 붕괴 구간 제외 | 폴드↔LB 오차 3.03 |
 | **Model Calibration** | `playbook/methods/calibration.py` — 아핀 보정 (파라미터 2개) | **+12.9** |
 | **Data Leakage Audit** | `toolkit/check_row_independence.py` — FULL/SHUFFLE/SUBSET/SOLO 행동 검증 | 누출 2.6e-09 |
+| **Deep Learning** | `src/pipeline/train_mlp_only.py` · `playbook/methods/neural.py` — MLP 5시드 배깅, 목적함수 분할 | **+36.2** |
+| **Gradient Boosting** | `playbook/methods/trees.py` — LGBM·XGB·CatBoost 3종 앵커, 분류/회귀 목적함수 분할 | **+12.5** |
 
 ---
 
@@ -125,14 +127,14 @@ cd playbook && python3 run.py list        # 기법 44종 카탈로그
 │   ├── check_row_independence.py   행 독립성 규정 위반 검출
 │   └── blend_math.py               앙상블 닫힌형 계산
 │
-├── playbook/          ⭐ 기법 카탈로그 44종 (채택 24 · 기각 16 · 보류 4)
+├── playbook/          ⭐ 기법 카탈로그 50종 (채택 29 · 기각 17 · 보류 4)
 │   ├── methods/                    기법 구현 (features · lookups · calibration ·
-│   │                               ensemble · validation · rejected)
+│   │                               ensemble · trees · neural · validation · rejected)
 │   ├── config.py                   새 대회에 맞춰 이 파일만 고친다
 │   └── run.py                      python3 run.py list
 │
 ├── study_guide/       ⭐ 학습자료 PDF 2종
-│   ├── 방법론_학습자료.pdf            32쪽 — 기초 개념 + 기법 44종 + 시너지 매트릭스
+│   ├── 방법론_학습자료.pdf            32쪽 — 기초 개념 + 기법 50종 + 시너지 매트릭스
 │   └── 딥러닝_LLM_최적화_정리.pdf     14쪽 — 이론과 대회 경험의 연결
 └── docs/              방법론 · 교훈 · 검증 · GPU
 ```
@@ -165,12 +167,12 @@ python3 toolkit/blend_math.py --demo
 
 ### 2. 기법 카탈로그 (`playbook/`)
 
-시도한 기법 44종을 **실행 가능한 코드 + 판정 근거**로 정리했습니다.
+시도한 기법 50종을 **실행 가능한 코드 + 판정 근거**로 정리했습니다.
 **실패한 기법도 코드로 남겼습니다** — 지운 기법은 반드시 누군가 다시 제안하기 때문입니다.
 
 ```bash
 cd playbook
-python3 run.py list                      # 44종 (✅24 ❌16 ⏸4)
+python3 run.py list                      # 50종 (✅29 ❌17 ⏸4)
 python3 run.py list --status REJECTED    # 실패한 것만
 python3 run.py show <id>                 # 근거·주의사항·구현 위치
 ```

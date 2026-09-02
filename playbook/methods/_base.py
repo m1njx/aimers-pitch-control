@@ -50,7 +50,7 @@ def method(**kw):
 
 def load_all():
     """모든 기법 모듈을 import 해 레지스트리를 채운다."""
-    from . import features, lookups, calibration, ensemble, validation, rejected  # noqa
+    from . import features, lookups, calibration, ensemble, trees, neural, validation, rejected  # noqa
     return REGISTRY
 
 

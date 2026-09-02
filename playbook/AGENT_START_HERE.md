@@ -39,7 +39,7 @@ python3 run.py next
 기법 카탈로그는 이렇게 본다:
 
 ```bash
-python3 run.py list                 # 전체 44개 (✅24 ❌16 ⏸4)
+python3 run.py list                 # 전체 50개 (✅29 ❌17 ⏸4)
 python3 run.py list --stage 6       # 특정 단계만
 python3 run.py list --status REJECTED   # 실패한 것만 (재제안 방어용)
 python3 run.py show lookup.entity_residual   # 상세 + 근거 + 구현 위치
